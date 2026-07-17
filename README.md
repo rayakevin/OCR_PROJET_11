@@ -2,6 +2,9 @@
 
 Le livrable de mission se trouve dans [`ASTRODYNAMICS/`](ASTRODYNAMICS/README.md).
 
+La documentation complète de l'architecture et des flux est disponible dans
+[`ASTRODYNAMICS/DOCUMENTATION_PERSONNELLE.html`](ASTRODYNAMICS/DOCUMENTATION_PERSONNELLE.html).
+
 Résultat final sur `LunarLander-v3` : **227,39 ± 48,37** sur 100 épisodes,
 avec **95 % d'atterrissages réussis**.
 

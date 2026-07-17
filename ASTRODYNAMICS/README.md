@@ -21,6 +21,7 @@ Le pilote retenu est un agent PPO avec `gamma=0.999`. Son évaluation finale sur
 | GUI | [`gui/app.py`](gui/app.py) |
 | Dashboard | [`dashboard/app.py`](dashboard/app.py) |
 | Modèle | [`artifacts/models/ppo_gamma_extended/best_model.zip`](artifacts/models/ppo_gamma_extended/best_model.zip) |
+| Documentation personnelle | [`DOCUMENTATION_PERSONNELLE.html`](DOCUMENTATION_PERSONNELLE.html) |
 
 ## Installation
 
