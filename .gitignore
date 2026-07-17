@@ -19,3 +19,10 @@ ASTRODYNAMICS/artifacts/demo_logs/
 .env
 .env.*
 !.env.example
+
+# Personal working documents and internal project controls
+**/DOCUMENTATION_PERSONNELLE.html
+**/DEMARCHE_MISSION.md
+**/CAHIER_DES_CHARGES.md
+**/RAPPORT_VALIDATION_FINAL.md
+**/validate_mission.py

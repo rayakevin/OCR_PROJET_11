@@ -85,9 +85,3 @@ Les tests vérifient notamment :
 - `evaluations/*/during_training/evaluations.npz` ;
 - `gui_runs/runs.csv` après utilisation de la GUI.
 
-## Documents de pilotage
-
-- [`DEMARCHE_MISSION.md`](DEMARCHE_MISSION.md) : ordre de réalisation ;
-- [`CAHIER_DES_CHARGES.md`](CAHIER_DES_CHARGES.md) : exigences consolidées ;
-- `RAPPORT_VALIDATION_FINAL.md` : vérification finale et preuves.
-
