@@ -1,0 +1,15 @@
+{
+  "evaluation_id": "ppo_default_baseline",
+  "algorithm": "PPO",
+  "n_episodes": 50,
+  "seed_start": 1000,
+  "mean_reward": 41.807389684346134,
+  "std_reward": 79.48879767843904,
+  "median_reward": 8.955365378092127,
+  "min_reward": -56.81998880436949,
+  "max_reward": 219.73232036380563,
+  "success_rate": 0.18,
+  "mean_episode_length": 917.1,
+  "mean_fuel_proxy": 153.39960000000082,
+  "evaluated_at_utc": "2026-07-15T20:35:52.212282+00:00"
+}

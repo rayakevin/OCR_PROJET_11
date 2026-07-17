@@ -1,0 +1,15 @@
+{
+  "evaluation_id": "ppo_gamma_extended_selection",
+  "algorithm": "PPO",
+  "n_episodes": 50,
+  "seed_start": 5000,
+  "mean_reward": 232.95163048079158,
+  "std_reward": 30.42624153246348,
+  "median_reward": 234.8077793460146,
+  "min_reward": 121.1523924135995,
+  "max_reward": 278.32781335358834,
+  "success_rate": 1.0,
+  "mean_episode_length": 437.84,
+  "mean_fuel_proxy": 66.22919999999978,
+  "evaluated_at_utc": "2026-07-15T20:36:26.237247+00:00"
+}

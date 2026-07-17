@@ -1,0 +1,15 @@
+{
+  "evaluation_id": "ppo_nsteps_1024_selection",
+  "algorithm": "PPO",
+  "n_episodes": 50,
+  "seed_start": 5000,
+  "mean_reward": -74.11954623557182,
+  "std_reward": 30.35203862409811,
+  "median_reward": -68.16447609603179,
+  "min_reward": -177.31235996585932,
+  "max_reward": -23.070295788618225,
+  "success_rate": 0.0,
+  "mean_episode_length": 982.06,
+  "mean_fuel_proxy": 175.50300000000112,
+  "evaluated_at_utc": "2026-07-15T20:36:23.954996+00:00"
+}

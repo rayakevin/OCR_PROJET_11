@@ -1,0 +1,15 @@
+{
+  "evaluation_id": "dqn_default_selection",
+  "algorithm": "DQN",
+  "n_episodes": 50,
+  "seed_start": 5000,
+  "mean_reward": 32.40568650949546,
+  "std_reward": 112.28913414713577,
+  "median_reward": 53.223641709237825,
+  "min_reward": -260.0538957708603,
+  "max_reward": 222.42080736548843,
+  "success_rate": 0.26,
+  "mean_episode_length": 851.66,
+  "mean_fuel_proxy": 133.62360000000035,
+  "evaluated_at_utc": "2026-07-15T20:36:07.783055+00:00"
+}
