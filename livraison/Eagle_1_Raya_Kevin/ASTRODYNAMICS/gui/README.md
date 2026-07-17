@@ -30,7 +30,8 @@ L'interface est disponible par défaut sur `http://localhost:8501`.
 
 - contrôle de la disponibilité de l'API ;
 - choix de la seed ;
-- visualisation en direct de l'épisode ;
+- choix de la durée de visualisation, de 5 à 60 secondes ;
+- calcul des actions par l'API, puis rejeu déterministe du même vol ;
 - affichage de l'action, de la récompense et de l'altitude ;
 - résumé de la réussite, du nombre de pas et du proxy carburant ;
 - graphiques de récompense et de distribution des actions ;
@@ -46,3 +47,9 @@ uv run pytest ASTRODYNAMICS/gui/tests -q
 Le test joue une réussite complète via l'API et contrôle les fichiers destinés
 au dashboard.
 
+## Durée de visualisation
+
+La durée choisie ne modifie ni la politique ni la simulation. La GUI demande d'abord
+une action à l'API pour chaque pas, enregistre ces actions, puis rejoue la même seed
+avec les mêmes actions. Le rythme d'affichage est calculé automatiquement pour viser
+la durée demandée sans exposer un réglage technique de FPS.

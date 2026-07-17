@@ -4,7 +4,7 @@ import pandas as pd
 from fastapi.testclient import TestClient
 
 from ASTRODYNAMICS.api.app import app
-from ASTRODYNAMICS.gui.app import check_api, play_episode, save_run
+from ASTRODYNAMICS.gui.app import check_api, play_episode, replay_episode, save_run
 
 
 def test_gui_plays_and_saves_a_successful_episode(tmp_path):
@@ -18,6 +18,15 @@ def test_gui_plays_and_saves_a_successful_episode(tmp_path):
     assert len(steps) == result.steps
     assert {"action", "cumulative_reward", "x", "y", "angle"} <= set(steps.columns)
 
+    rendered_steps = []
+    replay_episode(
+        seed=result.seed,
+        steps=steps,
+        duration_seconds=0,
+        on_frame=lambda _frame, row: rendered_steps.append(row["step"]),
+    )
+    assert rendered_steps == [steps.iloc[-1]["step"]]
+
     run_dir = save_run(result, steps, output_dir=tmp_path)
     assert (run_dir / "summary.json").exists()
     assert (run_dir / "steps.csv").exists()
@@ -25,4 +34,3 @@ def test_gui_plays_and_saves_a_successful_episode(tmp_path):
     registry = pd.read_csv(tmp_path / "runs.csv")
     assert len(registry) == 1
     assert bool(registry.iloc[0]["success"])
-

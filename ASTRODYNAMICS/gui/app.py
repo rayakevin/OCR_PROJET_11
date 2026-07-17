@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import math
 import os
+import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -60,13 +62,10 @@ def check_api(api_url: str, client=None) -> dict:
 def play_episode(
     api_url: str,
     seed: int,
-    display_every: int = 3,
-    on_frame: Callable[[np.ndarray, dict], None] | None = None,
     client=None,
 ) -> tuple[EpisodeResult, pd.DataFrame]:
     """Joue un épisode ; chaque action est demandée à l'API par HTTP."""
-    render_mode = "rgb_array" if on_frame is not None else None
-    env = gym.make(ENV_ID, render_mode=render_mode)
+    env = gym.make(ENV_ID)
     observation, _ = env.reset(seed=seed)
 
     owned_client = client is None
@@ -111,9 +110,6 @@ def play_episode(
             }
             rows.append(row)
 
-            if on_frame is not None and step % max(display_every, 1) == 0:
-                on_frame(env.render(), row)
-
             observation = next_observation
             step += 1
     finally:
@@ -138,6 +134,69 @@ def play_episode(
         fuel_proxy=fuel_proxy,
     )
     return result, pd.DataFrame(rows)
+
+
+def replay_episode(
+    seed: int,
+    steps: pd.DataFrame,
+    duration_seconds: float,
+    on_frame: Callable[[np.ndarray, dict], None],
+    target_ui_fps: float = 10.0,
+) -> None:
+    """Rejoue les actions de l'API pendant la durée de visualisation demandée.
+
+    La simulation est déterministe : même seed et mêmes actions donnent le même vol.
+    Le nombre d'images est choisi automatiquement pour ne pas surcharger Streamlit.
+    """
+    if steps.empty:
+        raise ValueError("Aucune action à rejouer.")
+    if duration_seconds < 0:
+        raise ValueError("La durée de visualisation doit être positive.")
+
+    steps = steps.reset_index(drop=True)
+    frame_count = min(
+        len(steps),
+        max(1, math.ceil(duration_seconds * target_ui_fps)),
+    )
+    frame_indices = (
+        {len(steps) - 1}
+        if frame_count == 1
+        else set(np.linspace(0, len(steps) - 1, num=frame_count, dtype=int).tolist())
+    )
+
+    env = gym.make(ENV_ID, render_mode="rgb_array")
+    env.reset(seed=seed)
+    terminated = truncated = False
+    displayed_frames = 0
+    started_at = time.monotonic()
+
+    try:
+        for index, row in steps.iterrows():
+            if terminated or truncated:
+                raise RuntimeError("Le rejeu s'est terminé avant la dernière action enregistrée.")
+
+            _, _, terminated, truncated, _ = env.step(int(row["action"]))
+            if index not in frame_indices:
+                continue
+
+            if frame_count > 1:
+                target_elapsed = duration_seconds * displayed_frames / (frame_count - 1)
+                remaining = started_at + target_elapsed - time.monotonic()
+                if remaining > 0:
+                    time.sleep(remaining)
+
+            on_frame(env.render(), row.to_dict())
+            displayed_frames += 1
+
+        if not (terminated or truncated):
+            raise RuntimeError("Le rejeu n'a pas atteint la fin de l'épisode.")
+
+        if frame_count == 1 and duration_seconds > 0:
+            remaining = started_at + duration_seconds - time.monotonic()
+            if remaining > 0:
+                time.sleep(remaining)
+    finally:
+        env.close()
 
 
 def save_run(
@@ -173,7 +232,13 @@ def main() -> None:
         st.header("Simulation")
         api_url = st.text_input("URL de l'API", DEFAULT_API_URL)
         seed = int(st.number_input("Seed", min_value=0, value=10_000, step=1))
-        display_every = st.slider("Afficher une image tous les N pas", 1, 10, 3)
+        duration_seconds = st.slider(
+            "Durée de visualisation (secondes)",
+            min_value=5,
+            max_value=60,
+            value=25,
+            step=5,
+        )
 
         if st.button("Vérifier l'API", use_container_width=True):
             try:
@@ -199,11 +264,13 @@ def main() -> None:
         metric_boxes[3].metric("Altitude", f"{row['y']:.3f}")
 
     try:
-        with st.spinner("Eagle-1 est en vol…"):
-            result, steps = play_episode(
-                api_url=api_url,
+        with st.spinner("Calcul des décisions via l'API…"):
+            result, steps = play_episode(api_url=api_url, seed=seed)
+        with st.spinner(f"Visualisation du vol pendant environ {duration_seconds} s…"):
+            replay_episode(
                 seed=seed,
-                display_every=display_every,
+                steps=steps,
+                duration_seconds=float(duration_seconds),
                 on_frame=update_screen,
             )
     except Exception as exc:
@@ -237,4 +304,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
