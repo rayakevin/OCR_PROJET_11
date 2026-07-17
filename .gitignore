@@ -13,6 +13,7 @@ wheels/
 .pytest_cache/
 .ipynb_checkpoints/
 .DS_Store
+ASTRODYNAMICS/artifacts/demo_logs/
 
 # Local configuration and secrets
 .env

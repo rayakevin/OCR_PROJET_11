@@ -32,6 +32,34 @@ uv sync --dev
 
 ## Lancement
 
+### Démonstration complète — commande recommandée
+
+Depuis la racine du projet, cette commande démarre les trois services, contrôle
+leur disponibilité et ouvre automatiquement leurs pages dans le navigateur :
+
+```bash
+uv run python launch_demo.py
+```
+
+Le lanceur affiche les URL et conserve les sorties dans
+`ASTRODYNAMICS/artifacts/demo_logs/<date>-<heure>/`. `Ctrl+C` arrête ensemble
+l'API, la GUI et le dashboard. Si un port par défaut est occupé, le prochain
+port libre est sélectionné automatiquement.
+
+En environnement distant ou sans navigateur :
+
+```bash
+uv run python launch_demo.py --no-browser
+```
+
+Les ports sont personnalisables si nécessaire, par exemple :
+
+```bash
+uv run python launch_demo.py --api-port 8010 --gui-port 8511 --dashboard-port 8512
+```
+
+### Lancement manuel
+
 ### API
 
 ```bash
@@ -90,4 +118,3 @@ Les tests vérifient notamment :
 - [`DEMARCHE_MISSION.md`](DEMARCHE_MISSION.md) : ordre de réalisation ;
 - [`CAHIER_DES_CHARGES.md`](CAHIER_DES_CHARGES.md) : exigences consolidées ;
 - `RAPPORT_VALIDATION_FINAL.md` : vérification finale et preuves.
-
