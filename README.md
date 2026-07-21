@@ -2,10 +2,11 @@
 
 Le livrable de mission se trouve dans [`ASTRODYNAMICS/`](ASTRODYNAMICS/README.md).
 
-Résultat final sur `LunarLander-v3` : **249,28 ± 48,56** sur 100 épisodes,
-avec **96 % d'atterrissages réussis**. Le modèle PPO final est issu d'une
-recherche Optuna puis d'une validation multi-seed ; son facteur d'actualisation
-est `gamma=0.9992`.
+Résultat final sur `LunarLander-v3` : **268,98 ± 37,46** sur 100 épisodes,
+avec **96 % d'atterrissages réussis** et aucun épisode sous 78. Le modèle PPO
+final est issu d'une recherche Optuna de 120 essais, d'un raffinement de
+`gamma` puis d'une validation sur cinq seeds ; son facteur d'actualisation est
+`gamma=0.99976`.
 
 Installation :
 

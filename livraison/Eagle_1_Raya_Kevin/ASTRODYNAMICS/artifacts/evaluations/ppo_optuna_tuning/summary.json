@@ -3,13 +3,13 @@
   "algorithm": "PPO",
   "n_episodes": 50,
   "seed_start": 4000,
-  "mean_reward": 246.75369398291824,
-  "std_reward": 36.1539087396589,
-  "median_reward": 249.77350112438364,
-  "min_reward": 35.04780605482941,
-  "max_reward": 286.04677959205355,
+  "mean_reward": 266.743053168265,
+  "std_reward": 23.829866050854555,
+  "median_reward": 267.0754968165092,
+  "min_reward": 158.8962563882923,
+  "max_reward": 316.22837504348195,
   "success_rate": 0.98,
-  "mean_episode_length": 316.76,
-  "mean_fuel_proxy": 47.795999999999985,
-  "evaluated_at_utc": "2026-07-17T14:25:02.513921+00:00"
+  "mean_episode_length": 260.68,
+  "mean_fuel_proxy": 35.61900000000007,
+  "evaluated_at_utc": "2026-07-21T10:20:11.531221+00:00"
 }

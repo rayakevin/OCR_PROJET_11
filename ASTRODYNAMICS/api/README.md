@@ -26,11 +26,21 @@ Réponse :
 
 ```json
 {
-  "action": 2,
-  "action_label": "moteur principal",
+  "action": 0,
+  "action_label": "ne rien faire",
   "model_id": "ppo_optuna"
 }
 ```
+
+## Corps de requête
+
+| Champ | Type | Défaut | Rôle |
+|---|---|---|---|
+| `state` | liste de 8 nombres | — | Observation `LunarLander-v3`, dans l'ordre `x`, `y`, `vx`, `vy`, angle, vitesse angulaire, contact gauche, contact droit. |
+| `deterministic` | booléen | `true` | `true` : action la plus probable selon la politique. `false` : action échantillonnée, donc variable d'un appel à l'autre. |
+
+L'état est refusé avec un code `422` si sa longueur n'est pas exactement 8 ou
+s'il contient une valeur non finie (`NaN`, `inf`).
 
 ## Routes
 
@@ -39,7 +49,8 @@ Réponse :
 - `POST /play` : alias destiné à une boucle de simulation.
 
 Le chemin du modèle peut être remplacé avec la variable d'environnement
-`EAGLE1_MODEL_PATH`.
+`EAGLE1_MODEL_PATH`. Le champ `model_id` de la réponse reste l'identifiant
+nominal de la mission : il n'est pas relu depuis le fichier chargé.
 
 ## Tests
 

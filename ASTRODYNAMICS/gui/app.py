@@ -273,7 +273,11 @@ def main() -> None:
 
     with st.sidebar:
         st.header("Paramètres de vol")
-        api_url = st.text_input("URL de l'API", DEFAULT_API_URL)
+        api_url = st.text_input(
+            "URL de l'API",
+            DEFAULT_API_URL,
+            help="Valeur par défaut issue de la variable d'environnement EAGLE1_API_URL.",
+        )
         seed = int(st.number_input("Seed", min_value=0, value=10_000, step=1))
         duration_seconds = st.slider(
             "Durée de visualisation (secondes)",

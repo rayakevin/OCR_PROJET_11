@@ -1,0 +1,26 @@
+{
+  "experiment_id": "ppo_optuna_s901",
+  "algorithm": "PPO",
+  "env_id": "LunarLander-v3",
+  "seed": 901,
+  "n_envs": 1,
+  "total_timesteps": 1500000,
+  "training_duration_s": 1102.3429312439985,
+  "hyperparameters": {
+    "learning_rate": 0.001691318976240209,
+    "n_steps": 2048,
+    "batch_size": 128,
+    "n_epochs": 20,
+    "gae_lambda": 0.95,
+    "clip_range": 0.1,
+    "ent_coef": 0.007287490399697975,
+    "vf_coef": 1.0,
+    "max_grad_norm": 0.3,
+    "gamma": 0.99976
+  },
+  "best_model_path": "/home/raya-kevin/agent-workspace/projects/11_PROJET_11/P_11/ASTRODYNAMICS/artifacts/models/ppo_optuna_v2_s901/best_model.zip",
+  "selection_mean_reward": 258.03643300000005,
+  "selection_seed_start": 5000,
+  "selection_episodes": 50,
+  "created_at_utc": "2026-07-21T09:51:57.993432+00:00"
+}

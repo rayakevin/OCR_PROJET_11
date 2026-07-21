@@ -7,8 +7,11 @@ par le notebook et les runs enregistrés par la GUI.
 ## Lancement
 
 ```bash
-uv run streamlit run ASTRODYNAMICS/dashboard/app.py
+uv run streamlit run ASTRODYNAMICS/dashboard/app.py --server.port 8502
 ```
+
+Dashboard : `http://localhost:8502`. Le port est précisé explicitement car
+Streamlit prendrait sinon le port 8501, déjà utilisé par la GUI.
 
 ## Contenu
 
@@ -26,8 +29,10 @@ uv run streamlit run ASTRODYNAMICS/dashboard/app.py
 
 1. **Vue mission** : mesure le gain par rapport aux baselines.
 2. **Apprentissage** : montre quand et comment les modèles progressent.
-3. **Optuna** : rend visible la recherche, le zoom autour de `gamma=0.999`
-   et la robustesse du choix final sur trois seeds.
+3. **Optuna** : rend visible la recherche large, le raffinement de `gamma`
+   autour de l'optimum mesuré et la robustesse du choix final sur cinq seeds.
+   Le losange marque la pire seed de chaque finaliste : c'est ce point, et non
+   la moyenne, qui distingue un réglage fiable d'un réglage chanceux.
 4. **Épisodes** : vérifie que la moyenne ne masque pas les échecs.
 5. **Trajectoire** : explique les décisions au cours d'un vol.
 6. **Runs GUI** : relie l'évaluation hors ligne à l'utilisation locale.

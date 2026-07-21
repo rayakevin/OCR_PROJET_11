@@ -1,0 +1,30 @@
+{
+  "winner_id": "gamma_g004",
+  "source": "grille_gamma",
+  "parameters": {
+    "learning_rate": 0.001691318976240209,
+    "n_steps": 2048,
+    "batch_size": 128,
+    "n_epochs": 20,
+    "gae_lambda": 0.95,
+    "clip_range": 0.1,
+    "ent_coef": 0.007287490399697975,
+    "vf_coef": 1.0,
+    "max_grad_norm": 0.3,
+    "gamma": 0.99976
+  },
+  "search_mean_reward": 230.07432008333333,
+  "robust_mean_reward": 229.76236572000002,
+  "robust_std_reward": 14.84274550122099,
+  "robust_min_reward": 209.39849183333337,
+  "train_seeds": [
+    242,
+    342,
+    442,
+    542,
+    642
+  ],
+  "robust_timesteps": 300000,
+  "selection_eval_seed_start": 5000,
+  "selected_at_utc": "2026-07-21T09:31:14.748484+00:00"
+}

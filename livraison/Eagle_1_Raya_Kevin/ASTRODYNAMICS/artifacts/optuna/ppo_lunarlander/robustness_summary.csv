@@ -1,4 +1,6 @@
-candidate_id,source,trial_number,parameters_json,mean_reward,std_between_seeds,mean_success_rate,mean_fuel_proxy,mean_episode_length
-gamma_t006,gamma_cible,6,"{""batch_size"": 64, ""clip_range"": 0.2, ""ent_coef"": 0.0, ""gae_lambda"": 0.9, ""gamma"": 0.9992, ""learning_rate"": 0.0009895892214995185, ""n_epochs"": 10, ""n_steps"": 2048, ""vf_coef"": 0.5}",183.6000311459505,47.600332820993245,0.8111111111111112,47.22800000000001,369.6111111111111
-broad_t016,recherche_large,16,"{""batch_size"": 64, ""clip_range"": 0.2, ""ent_coef"": 0.0, ""gae_lambda"": 0.9, ""gamma"": 0.995, ""learning_rate"": 0.0009895892214995185, ""n_epochs"": 10, ""n_steps"": 2048, ""vf_coef"": 0.5}",180.66987989962493,102.91170889832806,0.7666666666666666,68.4256666666667,460.0333333333333
-gamma_t003,gamma_cible,3,"{""batch_size"": 64, ""clip_range"": 0.2, ""ent_coef"": 0.0, ""gae_lambda"": 0.9, ""gamma"": 0.997, ""learning_rate"": 0.0009895892214995185, ""n_epochs"": 10, ""n_steps"": 2048, ""vf_coef"": 0.5}",168.51153548434914,64.2068563347043,0.8111111111111112,64.54433333333323,423.26666666666665
+candidate_id,mean,std,min,max,count,source,search_mean_reward
+gamma_g004,229.76236572000002,14.84274550122099,209.39849183333337,247.1657791333333,5,grille_gamma,230.07432008333333
+broad_t068,228.08923738666667,41.727310609161044,155.2863513,256.0594016333334,5,recherche_large,228.20754929999998
+broad_t078,189.52847232,31.576937917078236,156.45781270000003,236.43191513333332,5,recherche_large,224.1166536
+broad_t089,178.805564,51.28271910171327,96.62366060000001,227.67202193333335,5,recherche_large,213.78037954999996
+broad_t110,177.58952922666668,117.72596278063868,-23.7555577,266.82603889999996,5,recherche_large,224.21844055000003

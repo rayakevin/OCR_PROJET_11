@@ -5,15 +5,34 @@
 Le pilote retenu est un agent PPO optimisé avec Optuna. Son évaluation finale sur
 100 épisodes indépendants donne :
 
-- récompense moyenne : **249,28** ;
-- écart-type : **48,56** ;
+- récompense moyenne : **268,98** ;
+- écart-type : **37,46** ;
 - taux d'atterrissage réussi : **96 %** ;
-- longueur moyenne : **327 pas** ;
-- proxy carburant moyen : **47,81**.
+- pire épisode : **78,40** ;
+- longueur moyenne : **263 pas** ;
+- proxy carburant moyen : **35,79**.
 
-La recherche comprend 20 trials TPE, une grille de 9 valeurs autour de
-`gamma=0.999`, puis une validation des trois meilleurs réglages sur trois seeds.
-Le réglage final utilise notamment `gamma=0.9992` et `learning_rate≈9,90e-4`.
+## Démarche d'optimisation
+
+La campagne Optuna se déroule en trois temps, portés par trois modules
+réexécutables ([`optuna_search.py`](optuna_search.py),
+[`optuna_select.py`](optuna_select.py), [`optuna_final.py`](optuna_final.py)) :
+
+1. **Recherche large** — 120 essais TPE sur dix hyperparamètres. `gamma` est
+   échantillonné sur `1-gamma` en loi log-uniforme, ce qui explore uniformément
+   l'horizon effectif de 50 à 10 000 pas. Chaque essai est entraîné sur **deux
+   seeds** et noté par leur moyenne, pour ne pas optimiser le bruit
+   d'initialisation. Un `MedianPruner` a élagué 70 essais sur 120.
+2. **Raffinement de `gamma`** — grille de 9 valeurs centrée sur l'optimum
+   mesuré, régulière en horizon effectif, chaque point entraîné sur trois seeds.
+3. **Validation de robustesse** — les finalistes sont réentraînés sur cinq
+   seeds neuves à 300 000 pas. Le classement retient la moyenne inter-seeds et
+   la pire seed comme arbitre.
+
+Le réglage final utilise `gamma=0.99976`, `learning_rate≈1,69e-3`,
+`ent_coef≈7,29e-3`, `n_epochs=20` et `clip_range=0.1`. Il est entraîné sur
+1 500 000 pas avec trois seeds, la meilleure étant choisie sur le jeu de
+sélection — jamais sur les 100 épisodes réservés.
 
 ## Livrables
 
@@ -115,7 +134,11 @@ Les tests vérifient notamment :
 - `evaluations/*/episodes.csv` ;
 - `evaluations/*/steps.csv` ;
 - `evaluations/*/during_training/evaluations.npz` ;
-- `optuna/ppo_lunarlander/trials.csv` et `study.db` ;
+- `optuna/ppo_lunarlander/trials.csv` ;
+- `optuna/ppo_lunarlander/parameter_importance.csv` ;
 - `optuna/ppo_lunarlander/gamma_focus/` ;
 - `optuna/ppo_lunarlander/robustness.csv` ;
 - `gui_runs/runs.csv` après utilisation de la GUI.
+
+Les bases `study.db` ne sont pas lues par le dashboard : elles conservent les
+études Optuna pour pouvoir les reprendre ou les rejouer hors notebook.

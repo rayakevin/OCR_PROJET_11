@@ -1,0 +1,40 @@
+{
+  "winner_experiment_id": "ppo_optuna_v2_s902",
+  "winner_seed": 902,
+  "selection_mean_reward": 265.53414912,
+  "selection_seed_start": 5000,
+  "candidates": [
+    {
+      "experiment_id": "ppo_optuna_v2_s902",
+      "seed": 902,
+      "selection_mean_reward": 265.53414912,
+      "training_duration_s": 1089.6078146350046
+    },
+    {
+      "experiment_id": "ppo_optuna_v2_s901",
+      "seed": 901,
+      "selection_mean_reward": 258.03643300000005,
+      "training_duration_s": 1102.3429312439985
+    },
+    {
+      "experiment_id": "ppo_optuna_v2_s900",
+      "seed": 900,
+      "selection_mean_reward": 254.94641386000004,
+      "training_duration_s": 1236.6431015990092
+    }
+  ],
+  "hyperparameters": {
+    "learning_rate": 0.001691318976240209,
+    "n_steps": 2048,
+    "batch_size": 128,
+    "n_epochs": 20,
+    "gae_lambda": 0.95,
+    "clip_range": 0.1,
+    "ent_coef": 0.007287490399697975,
+    "vf_coef": 1.0,
+    "max_grad_norm": 0.3,
+    "gamma": 0.99976
+  },
+  "total_timesteps": 1500000,
+  "selected_at_utc": "2026-07-21T09:54:13.119090+00:00"
+}

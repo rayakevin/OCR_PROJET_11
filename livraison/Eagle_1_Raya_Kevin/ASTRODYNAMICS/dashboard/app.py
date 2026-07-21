@@ -94,8 +94,13 @@ def style_figure(fig, *, height: int | None = None):
 
 
 def experiment_phase(evaluation_id: str) -> str:
-    """Regroupe les nombreuses mesures dans des étapes lisibles."""
-    if evaluation_id == "random_baseline" or "baseline" in evaluation_id:
+    """Regroupe les nombreuses mesures dans des étapes lisibles.
+
+    L'ordre des tests compte : un identifiant peut cumuler plusieurs mots-clés
+    (par exemple `ppo_optuna_gamma_t003_s242_robustness`), et c'est le premier
+    test satisfait qui décide de la phase.
+    """
+    if "baseline" in evaluation_id:
         return "Baseline"
     if "robustness" in evaluation_id:
         return "Robustesse"
@@ -159,25 +164,46 @@ def load_gui_runs(artifacts_dir: Path = ARTIFACTS_DIR) -> pd.DataFrame:
 
 
 def load_optuna_results(artifacts_dir: Path = ARTIFACTS_DIR) -> dict[str, pd.DataFrame]:
-    """Charge les quatre tables produites par la recherche Optuna."""
-    optuna_dir = Path(artifacts_dir) / "optuna" / "ppo_lunarlander"
+    """Charge les tables produites par la campagne Optuna.
+
+    `trials` reçoit une colonne `params_gamma` dérivée : la recherche
+    échantillonne `1 - gamma` en loi log-uniforme, mais c'est gamma lui-même
+    qu'on veut lire sur les graphiques.
+    """
+    optuna_dir = (
+        OPTUNA_DIR
+        if Path(artifacts_dir) == ARTIFACTS_DIR
+        else Path(artifacts_dir) / "optuna" / "ppo_lunarlander"
+    )
     paths = {
         "trials": optuna_dir / "trials.csv",
         "gamma": optuna_dir / "gamma_focus" / "trials.csv",
         "robustness": optuna_dir / "robustness.csv",
+        "robustness_summary": optuna_dir / "robustness_summary.csv",
         "importance": optuna_dir / "parameter_importance.csv",
     }
-    return {
+    tables = {
         name: pd.read_csv(path) if path.exists() else pd.DataFrame()
         for name, path in paths.items()
     }
+    trials = tables["trials"]
+    if not trials.empty and "params_one_minus_gamma" in trials:
+        trials["params_gamma"] = 1.0 - trials["params_one_minus_gamma"]
+    return tables
+
+
+def load_selected_config(artifacts_dir: Path = ARTIFACTS_DIR) -> dict:
+    """Lit le réglage retenu à l'issue de la validation multi-seed."""
+    path = Path(artifacts_dir) / "optuna" / "ppo_lunarlander" / "selected_config.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
 def render_overview(registry: pd.DataFrame) -> None:
     st.subheader("De la baseline au pilote final")
     st.write(
-        "La lecture se fait de gauche à droite : politiques de référence, essais "
-        "contrôlés, sélection sur seeds communes, puis validation sur 100 épisodes."
+        "Les évaluations sont classées par récompense moyenne croissante : les "
+        "politiques de référence se trouvent en bas, le pilote final en haut. "
+        "Le filtre « Phase » isole une étape précise de la mission."
     )
 
     fig = px.bar(
@@ -242,39 +268,40 @@ def render_learning(artifacts_dir: Path) -> None:
 
 
 def render_optuna(artifacts_dir: Path) -> None:
-    """Explique la recherche large, le focus gamma et la validation multi-seeds."""
+    """Raconte la recherche large, le raffinement de gamma et la sélection robuste."""
     results = load_optuna_results(artifacts_dir)
     trials = results["trials"]
     gamma = results["gamma"]
     robustness = results["robustness"]
+    robust_summary = results["robustness_summary"]
     importance = results["importance"]
+    selected = load_selected_config(artifacts_dir)
     if trials.empty or gamma.empty or robustness.empty:
         st.warning("Les artefacts Optuna ne sont pas encore disponibles.")
         return
 
     complete = trials[trials["state"] == "COMPLETE"].copy()
-    gamma_complete = gamma[gamma["state"] == "COMPLETE"].copy()
-    gamma_best = gamma_complete.loc[gamma_complete["value"].idxmax()]
-    robust_means = (
-        robustness.groupby("candidate_id", as_index=False)["mean_reward"]
-        .mean()
-        .sort_values("mean_reward", ascending=False)
-    )
-    robust_winner_id = robust_means.iloc[0]["candidate_id"]
-    robust_winner = robustness[robustness["candidate_id"] == robust_winner_id].iloc[0]
-    robust_gamma = json.loads(robust_winner["parameters_json"])["gamma"]
+    pruned = trials[trials["state"] == "PRUNED"]
 
     st.subheader("Recherche reproductible des hyperparamètres PPO")
     st.write(
-        "Une recherche TPE explore plusieurs paramètres avec un budget commun. "
-        "Une grille affine ensuite gamma autour de 0.999, avant de réentraîner "
-        "les trois meilleurs réglages sur trois seeds."
+        "Une recherche TPE explore dix paramètres conjointement. Chaque essai est "
+        "entraîné sur deux seeds et noté par leur moyenne : un score obtenu sur une "
+        "seule seed mesurerait autant le tirage d'initialisation que le réglage. "
+        "Une grille affine ensuite gamma autour de l'optimum mesuré, puis les "
+        "finalistes sont réentraînés sur cinq seeds neuves."
     )
+
     cols = st.columns(4)
-    cols[0].metric("Trials TPE", len(complete))
-    cols[1].metric("Gamma testés", len(gamma_complete))
-    cols[2].metric("Gamma court", f"{gamma_best['params_gamma']:.4f}")
-    cols[3].metric("Gamma après 3 seeds", f"{robust_gamma:.4f}")
+    cols[0].metric("Essais aboutis", len(complete))
+    cols[1].metric("Essais élagués", len(pruned), help="Interrompus par le MedianPruner.")
+    if selected:
+        cols[2].metric("Gamma retenu", f"{selected['parameters']['gamma']:.5f}")
+        cols[3].metric(
+            "Moyenne sur 5 seeds",
+            f"{selected['robust_mean_reward']:.1f}",
+            delta=f"pire seed {selected['robust_min_reward']:.0f}",
+        )
 
     left, right = st.columns(2)
     with left:
@@ -283,38 +310,44 @@ def render_optuna(artifacts_dir: Path) -> None:
             x="number",
             y="value",
             color="params_gamma",
-            size="user_attrs_success_rate",
-            hover_data=[
-                "params_learning_rate", "params_n_steps", "params_n_epochs",
-                "params_gae_lambda", "params_clip_range",
-            ],
+            hover_data=["params_learning_rate", "params_ent_coef", "user_attrs_score_std"],
             labels={
-                "number": "Trial",
-                "value": "Récompense moyenne",
+                "number": "Essai",
+                "value": "Moyenne sur 2 seeds",
                 "params_gamma": "Gamma",
-                "user_attrs_success_rate": "Réussite",
             },
-            title="Recherche large TPE",
+            title=f"Recherche large TPE — {len(complete)} essais aboutis",
             color_continuous_scale=[[0, "#d9e2e6"], [1, "#12384a"]],
         )
         fig.add_hline(y=200, line_dash="dash", line_color="#2f765f")
         st.plotly_chart(style_figure(fig), width="stretch")
     with right:
-        fig = px.line(
-            gamma_complete.sort_values("params_gamma"),
-            x="params_gamma",
-            y="value",
-            markers=True,
-            labels={"params_gamma": "Gamma", "value": "Récompense moyenne"},
-            title="Recherche ciblée autour de gamma=0.999",
-            color_discrete_sequence=["#176780"],
+        # Barres d'erreur : chaque point de grille est mesuré sur plusieurs seeds,
+        # donc sa dispersion fait partie du résultat, pas du décor.
+        grid = gamma.sort_values("gamma")
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(
+                x=grid["gamma"],
+                y=grid["mean"],
+                error_y=dict(type="data", array=grid["std"], visible=True),
+                mode="lines+markers",
+                line=dict(color="#176780"),
+                name="Moyenne inter-seeds",
+            )
         )
         fig.add_hline(y=200, line_dash="dash", line_color="#2f765f")
-        fig.add_vline(
-            x=robust_gamma,
-            line_dash="dot",
-            line_color="#c26a2e",
-            annotation_text="retenu après 3 seeds",
+        if selected:
+            fig.add_vline(
+                x=selected["parameters"]["gamma"],
+                line_dash="dot",
+                line_color="#c26a2e",
+                annotation_text="retenu",
+            )
+        fig.update_layout(
+            title="Grille ciblée sur gamma, centrée sur l'optimum mesuré",
+            xaxis_title="Gamma",
+            yaxis_title="Récompense moyenne",
         )
         st.plotly_chart(style_figure(fig), width="stretch")
 
@@ -331,30 +364,50 @@ def render_optuna(artifacts_dir: Path) -> None:
             )
             st.plotly_chart(style_figure(fig), width="stretch")
     with right:
-        robustness_plot = robustness.copy()
-        robustness_plot["training_seed"] = robustness_plot["training_seed"].astype(str)
-        fig = px.bar(
-            robustness_plot,
-            x="candidate_id",
-            y="mean_reward",
-            color="training_seed",
-            barmode="group",
-            labels={
-                "candidate_id": "Candidat",
-                "mean_reward": "Récompense moyenne",
-                "training_seed": "Seed d'entraînement",
-            },
-            title="Validation des trois candidats sur trois seeds",
-            color_discrete_sequence=BRAND_COLORS,
-        )
-        fig.add_hline(y=200, line_dash="dash", line_color="#2f765f")
-        st.plotly_chart(style_figure(fig), width="stretch")
+        if not robust_summary.empty:
+            plot = robust_summary.sort_values("mean")
+            fig = go.Figure()
+            fig.add_trace(
+                go.Bar(
+                    x=plot["mean"],
+                    y=plot["candidate_id"],
+                    orientation="h",
+                    error_x=dict(type="data", array=plot["std"], visible=True),
+                    marker_color="#176780",
+                    name="Moyenne sur 5 seeds",
+                )
+            )
+            # La pire seed est le vrai critère de fiabilité : un candidat qui
+            # s'effondre une fois sur cinq n'est pas utilisable en mission.
+            fig.add_trace(
+                go.Scatter(
+                    x=plot["min"],
+                    y=plot["candidate_id"],
+                    mode="markers",
+                    marker=dict(color="#c26a2e", symbol="diamond", size=11),
+                    name="Pire seed",
+                )
+            )
+            fig.add_vline(x=200, line_dash="dash", line_color="#2f765f")
+            fig.update_layout(
+                title="Validation des finalistes sur cinq seeds",
+                xaxis_title="Récompense moyenne",
+                yaxis_title="Candidat",
+            )
+            st.plotly_chart(style_figure(fig), width="stretch")
+
+    st.caption(
+        "Un score de recherche élevé ne garantit rien : le candidat le plus "
+        "prometteur peut s'effondrer sur une seed. Le losange marque le pire des "
+        "cinq entraînements, seul critère qui distingue un réglage fiable d'un "
+        "réglage chanceux."
+    )
 
     displayed_columns = [
-        "number", "value", "params_learning_rate", "params_n_steps",
-        "params_batch_size", "params_n_epochs", "params_gamma",
-        "params_gae_lambda", "params_clip_range", "params_ent_coef",
-        "params_vf_coef", "user_attrs_success_rate",
+        "number", "value", "user_attrs_score_std", "user_attrs_score_min",
+        "params_gamma", "params_learning_rate", "params_ent_coef", "params_n_steps",
+        "params_batch_size", "params_n_epochs", "params_gae_lambda",
+        "params_clip_range", "params_vf_coef", "params_max_grad_norm",
     ]
     st.dataframe(
         complete[[column for column in displayed_columns if column in complete]]
@@ -431,7 +484,11 @@ def render_trajectory(artifacts_dir: Path) -> None:
     for column, label in [("next_state_1", "Altitude"), ("next_state_3", "Vitesse verticale"),
                           ("next_state_4", "Angle")]:
         fig.add_trace(go.Scatter(x=episode["step"], y=episode[column], mode="lines", name=label))
-    fig.update_layout(title="Télémétrie normalisée", xaxis_title="Pas", yaxis_title="Valeur")
+    fig.update_layout(
+        title="Télémétrie de l'épisode (unités du simulateur)",
+        xaxis_title="Pas",
+        yaxis_title="Valeur",
+    )
     st.plotly_chart(style_figure(fig), width="stretch")
 
     action_counts = episode["action_label"].value_counts().rename_axis("action").reset_index(name="count")

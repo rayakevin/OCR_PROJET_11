@@ -8,8 +8,9 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
-# Dans l'environnement local du projet, Triton doit être chargé avant
-# Box2D/pygame. L'import reste facultatif pour assurer la portabilité CPU.
+# Triton doit être importé avant Box2D/pygame dans l'environnement local du
+# projet. L'API ne crée aucun environnement, mais l'import est conservé pour
+# rester aligné sur le notebook et la GUI ; il reste facultatif en CPU.
 try:
     import triton  # noqa: F401
 except ImportError:
@@ -42,8 +43,24 @@ DEFAULT_MODEL_PATH = (
 class StateRequest(BaseModel):
     """État LunarLander-v3 reçu par l'API."""
 
-    state: Annotated[list[float], Field(min_length=8, max_length=8)]
-    deterministic: bool = True
+    state: Annotated[
+        list[float],
+        Field(
+            min_length=8,
+            max_length=8,
+            description=(
+                "Observation LunarLander-v3, dans l'ordre : x, y, vitesse en x, "
+                "vitesse en y, angle, vitesse angulaire, contact gauche, contact droit."
+            ),
+        ),
+    ]
+    deterministic: bool = Field(
+        True,
+        description=(
+            "Vrai : action la plus probable selon la politique. "
+            "Faux : action échantillonnée, donc variable d'un appel à l'autre."
+        ),
+    )
 
     @field_validator("state")
     @classmethod
@@ -62,6 +79,8 @@ class ActionResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
+    """Diagnostic de service renvoyé par `GET /health`."""
+
     status: str
     model_loaded: bool
     model_id: str
@@ -96,7 +115,12 @@ app = FastAPI(
 
 @app.get("/health", response_model=HealthResponse, tags=["service"])
 def health(request: Request) -> HealthResponse:
-    """Vérifie que l'API et le modèle sont prêts."""
+    """Vérifie que l'API répond et qu'un modèle est chargé.
+
+    `model_id` est l'identifiant nominal de la mission : il n'est pas relu
+    depuis le fichier chargé et reste donc inchangé si `EAGLE1_MODEL_PATH`
+    pointe vers un autre modèle.
+    """
     return HealthResponse(
         status="ok",
         model_loaded=request.app.state.model is not None,

@@ -39,8 +39,17 @@ def test_dashboard_loads_learning_curves():
 
 def test_dashboard_loads_optuna_results():
     results = load_optuna_results()
+    trials = results["trials"]
 
-    assert len(results["trials"].query("state == 'COMPLETE'")) == 20
-    assert len(results["gamma"].query("state == 'COMPLETE'")) == 9
-    assert results["robustness"]["training_seed"].nunique() == 3
-    assert set(results["importance"]["parameter"]) >= {"learning_rate", "gamma"}
+    # La recherche note chaque essai sur plusieurs seeds et élague les moins bons :
+    # les deux états doivent donc être présents et lisibles par le dashboard.
+    assert len(trials.query("state == 'COMPLETE'")) >= 40
+    assert len(trials.query("state == 'PRUNED'")) > 0
+    assert "params_gamma" in trials.columns
+    assert (trials["user_attrs_n_train_seeds"].dropna() >= 2).all()
+
+    assert len(results["gamma"]) >= 5
+    assert {"gamma", "mean", "std"} <= set(results["gamma"].columns)
+    assert results["robustness"]["train_seed"].nunique() >= 3
+    assert {"mean", "std", "min"} <= set(results["robustness_summary"].columns)
+    assert set(results["importance"]["parameter"]) >= {"learning_rate", "ent_coef"}
