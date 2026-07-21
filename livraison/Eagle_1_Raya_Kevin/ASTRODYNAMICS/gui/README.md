@@ -61,37 +61,6 @@ La cadence vise 24 images par seconde : sur un vol d'environ 240 pas rejoué en
 images par seconde, plus de la moitié des pas étaient sautés et la descente
 paraissait saccadée.
 
-## Trois styles de rendu
-
-Un sélecteur dans la barre latérale bascule entre trois affichages. **Aucun ne
-touche à la simulation** : mêmes décisions, même trajectoire, mêmes chiffres.
-
-| Style | Description |
-|---|---|
-| **Amélioré** (défaut) | Rendu de Gymnasium retouché : ciel dégradé, aire d'atterrissage matérialisée. 600×400. |
-| **Arcade** | Scène entièrement redessinée depuis l'état de la simulation : champ d'étoiles, relief ombré à crête éclairée, piste balisée, module articulé et flammes orientées selon le moteur allumé. 1200×800. |
-| **Natif** | Rendu brut de Gymnasium, sans retouche. Utile pour comparer. |
-
-Le style **Arcade** ne lit rien d'autre que ce que l'environnement expose déjà :
-`sky_polys` pour le relief, `lander` pour la position et l'angle, `helipad_x1/x2`
-pour l'aire visée, et l'action du pas pour les moteurs. Le décor étant immobile
-pendant un vol, il est composé une seule fois par seed et mémorisé — le coût par
-image tombe d'environ 23 ms à quelques millisecondes, ce qui permet de tenir les
-24 images par seconde en 1200×800.
-
-### Pourquoi un rendu maison plutôt qu'un existant
-
-Recherche faite : **aucun projet public ne propose de rendu alternatif pour
-LunarLander**. Les dépôts du domaine portent tous sur les algorithmes
-d'apprentissage et conservent l'affichage d'origine. Les jeux Lunar Lander en
-pygame que l'on trouve embarquent leur propre physique, incompatible avec un
-modèle entraîné sur `LunarLander-v3`. Quant aux banques de sprites libres
-(Kenney, CC0), elles proposent des vaisseaux vus de dessus, qui cadrent mal avec
-une vue de profil munie de pattes d'atterrissage.
-
-Changer d'environnement pour un moteur de jeu (Unity, Godot) était exclu :
-CG-03 impose `LunarLander-v3`, et il aurait fallu tout réentraîner.
-
 ## Habillage de la visualisation
 
 Le rendu de Gymnasium est volontairement minimal : ciel noir uni, sol blanc, et
