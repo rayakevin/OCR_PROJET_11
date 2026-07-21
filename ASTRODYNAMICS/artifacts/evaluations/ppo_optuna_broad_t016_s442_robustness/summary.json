@@ -1,0 +1,15 @@
+{
+  "evaluation_id": "ppo_optuna_broad_t016_s442_robustness",
+  "algorithm": "PPO",
+  "n_episodes": 30,
+  "seed_start": 3000,
+  "mean_reward": 64.47424902532225,
+  "std_reward": 120.01729128689333,
+  "median_reward": 49.594048439045444,
+  "min_reward": -352.99647437133433,
+  "max_reward": 219.33222492938552,
+  "success_rate": 0.4666666666666667,
+  "mean_episode_length": 747.2666666666667,
+  "mean_fuel_proxy": 116.21700000000008,
+  "evaluated_at_utc": "2026-07-17T14:08:48.726164+00:00"
+}

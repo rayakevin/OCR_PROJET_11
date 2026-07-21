@@ -1,0 +1,15 @@
+{
+  "evaluation_id": "ppo_gamma_focus_002_search",
+  "algorithm": "PPO",
+  "n_episodes": 20,
+  "seed_start": 2000,
+  "mean_reward": 135.23337483552513,
+  "std_reward": 131.36025717883712,
+  "median_reward": 200.17711174528614,
+  "min_reward": -108.01775701418711,
+  "max_reward": 244.03936023843676,
+  "success_rate": 0.75,
+  "mean_episode_length": 555.7,
+  "mean_fuel_proxy": 87.65099999999964,
+  "evaluated_at_utc": "2026-07-17T13:47:23.201627+00:00"
+}

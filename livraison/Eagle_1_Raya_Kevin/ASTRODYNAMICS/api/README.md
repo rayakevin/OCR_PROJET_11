@@ -28,7 +28,7 @@ Réponse :
 {
   "action": 2,
   "action_label": "moteur principal",
-  "model_id": "ppo_gamma_extended"
+  "model_id": "ppo_optuna"
 }
 ```
 
@@ -49,4 +49,3 @@ uv run pytest ASTRODYNAMICS/api/tests -q
 
 Les tests couvrent la santé du service, les formats valides et invalides, ainsi
 qu'un épisode complet réussi dont chaque action est obtenue via l'API.
-

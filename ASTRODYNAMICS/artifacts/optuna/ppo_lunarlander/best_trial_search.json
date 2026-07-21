@@ -1,0 +1,26 @@
+{
+  "study_name": "ppo_lunarlander_v3",
+  "trial_number": 16,
+  "objective_mean_reward": 213.04021134311924,
+  "parameters": {
+    "learning_rate": 0.0009895892214995185,
+    "n_steps": 2048,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "gamma": 0.995,
+    "gae_lambda": 0.9,
+    "clip_range": 0.2,
+    "ent_coef": 0.0,
+    "vf_coef": 0.5
+  },
+  "user_attrs": {
+    "actual_timesteps": 100352,
+    "mean_fuel_proxy": 70.36499999999977,
+    "model_path": "/home/raya-kevin/agent-workspace/projects/11_PROJET_11/P_11/ASTRODYNAMICS/artifacts/optuna/ppo_lunarlander/trials/trial_016/model.zip",
+    "std_reward": 58.00793309153971,
+    "success_rate": 0.95,
+    "training_duration_s": 56.643321814975934
+  },
+  "n_trials": 21,
+  "saved_at_utc": "2026-07-17T13:44:32.986579+00:00"
+}

@@ -1,0 +1,32 @@
+{
+  "winning_candidate": "gamma_t006",
+  "parameters": {
+    "learning_rate": 0.0009895892214995185,
+    "n_steps": 2048,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "gamma": 0.9992,
+    "gae_lambda": 0.9,
+    "clip_range": 0.2,
+    "ent_coef": 0.0,
+    "vf_coef": 0.5
+  },
+  "selection_metrics": {
+    "candidate_id": "gamma_t006",
+    "source": "gamma_cible",
+    "trial_number": 6,
+    "parameters_json": "{\"batch_size\": 64, \"clip_range\": 0.2, \"ent_coef\": 0.0, \"gae_lambda\": 0.9, \"gamma\": 0.9992, \"learning_rate\": 0.0009895892214995185, \"n_epochs\": 10, \"n_steps\": 2048, \"vf_coef\": 0.5}",
+    "mean_reward": 183.6000311459505,
+    "std_between_seeds": 47.600332820993245,
+    "mean_success_rate": 0.8111111111111112,
+    "mean_fuel_proxy": 47.22800000000001,
+    "mean_episode_length": 369.6111111111111
+  },
+  "training_seeds": [
+    242,
+    342,
+    442
+  ],
+  "evaluation_seed_start": 3000,
+  "saved_at_utc": "2026-07-17T14:16:58.667563+00:00"
+}

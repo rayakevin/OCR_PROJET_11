@@ -22,7 +22,7 @@ def test_health_reports_loaded_model(client):
     assert response.json() == {
         "status": "ok",
         "model_loaded": True,
-        "model_id": "ppo_gamma_extended",
+        "model_id": "ppo_optuna",
         "environment": "LunarLander-v3",
     }
 
@@ -37,7 +37,7 @@ def test_predict_returns_a_valid_action(client):
     body = response.json()
     assert body["action"] in {0, 1, 2, 3}
     assert isinstance(body["action_label"], str)
-    assert body["model_id"] == "ppo_gamma_extended"
+    assert body["model_id"] == "ppo_optuna"
 
 
 @pytest.mark.parametrize(
@@ -80,4 +80,3 @@ def test_full_successful_episode_is_driven_by_the_api(client):
     assert np.isclose(final_reward, 100.0)  # atterrissage, et non crash
     assert total_reward > 200.0
     assert steps < 1_000
-

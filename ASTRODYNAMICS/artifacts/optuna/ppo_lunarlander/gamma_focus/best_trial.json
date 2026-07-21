@@ -1,0 +1,28 @@
+{
+  "study_name": "ppo_gamma_focus_v1",
+  "trial_number": 3,
+  "objective_mean_reward": 215.18402517048975,
+  "parameters": {
+    "learning_rate": 0.0009895892214995185,
+    "n_steps": 2048,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "gamma": 0.997,
+    "gae_lambda": 0.9,
+    "clip_range": 0.2,
+    "ent_coef": 0.0,
+    "vf_coef": 0.5
+  },
+  "tested_values": [
+    0.997,
+    0.998,
+    0.9985,
+    0.999,
+    0.9992,
+    0.9994,
+    0.9995,
+    0.9996,
+    0.9997
+  ],
+  "saved_at_utc": "2026-07-17T13:53:14.714273+00:00"
+}

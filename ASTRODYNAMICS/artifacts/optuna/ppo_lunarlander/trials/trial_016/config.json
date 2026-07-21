@@ -1,0 +1,37 @@
+{
+  "trial_number": 16,
+  "parameters": {
+    "learning_rate": 0.0009895892214995185,
+    "n_steps": 2048,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "gamma": 0.995,
+    "gae_lambda": 0.9,
+    "clip_range": 0.2,
+    "ent_coef": 0.0,
+    "vf_coef": 0.5
+  },
+  "training_seed": 142,
+  "evaluation_seed_start": 2000,
+  "n_eval_episodes": 20,
+  "requested_timesteps": 100000,
+  "actual_timesteps": 100352,
+  "n_envs": 1,
+  "training_duration_s": 56.643321814975934,
+  "model_path": "/home/raya-kevin/agent-workspace/projects/11_PROJET_11/P_11/ASTRODYNAMICS/artifacts/optuna/ppo_lunarlander/trials/trial_016/model.zip",
+  "summary": {
+    "evaluation_id": "ppo_optuna_trial_016_search",
+    "algorithm": "PPO",
+    "n_episodes": 20,
+    "seed_start": 2000,
+    "mean_reward": 213.04021134311924,
+    "std_reward": 58.00793309153971,
+    "median_reward": 223.74586546659765,
+    "min_reward": -24.173926230358433,
+    "max_reward": 266.4965824910137,
+    "success_rate": 0.95,
+    "mean_episode_length": 454.6,
+    "mean_fuel_proxy": 70.36499999999977,
+    "evaluated_at_utc": "2026-07-17T13:39:51.791947+00:00"
+  }
+}

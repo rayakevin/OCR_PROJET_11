@@ -15,6 +15,8 @@ uv run streamlit run ASTRODYNAMICS/dashboard/app.py
 - indicateurs finaux : moyenne, écart-type, réussite, durée et carburant ;
 - comparaison dynamique des expériences et hyperparamètres ;
 - courbes d'apprentissage ;
+- suivi de la recherche Optuna : essais TPE, recherche fine de `gamma`,
+  importance des paramètres et validation multi-seed ;
 - filtres par algorithme, phase, résultat et récompense ;
 - analyse des 100 épisodes finaux ;
 - exploration pas à pas d'une trajectoire ;
@@ -24,13 +26,14 @@ uv run streamlit run ASTRODYNAMICS/dashboard/app.py
 
 1. **Vue mission** : mesure le gain par rapport aux baselines.
 2. **Apprentissage** : montre quand et comment les modèles progressent.
-3. **Épisodes** : vérifie que la moyenne ne masque pas les échecs.
-4. **Trajectoire** : explique les décisions au cours d'un vol.
-5. **Runs GUI** : relie l'évaluation hors ligne à l'utilisation locale.
+3. **Optuna** : rend visible la recherche, le zoom autour de `gamma=0.999`
+   et la robustesse du choix final sur trois seeds.
+4. **Épisodes** : vérifie que la moyenne ne masque pas les échecs.
+5. **Trajectoire** : explique les décisions au cours d'un vol.
+6. **Runs GUI** : relie l'évaluation hors ligne à l'utilisation locale.
 
 ## Tests
 
 ```bash
 uv run pytest ASTRODYNAMICS/dashboard/tests -q
 ```
-

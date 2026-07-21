@@ -2,14 +2,18 @@
 
 ## Résultat
 
-Le pilote retenu est un agent PPO avec `gamma=0.999`. Son évaluation finale sur
+Le pilote retenu est un agent PPO optimisé avec Optuna. Son évaluation finale sur
 100 épisodes indépendants donne :
 
-- récompense moyenne : **227,39** ;
-- écart-type : **48,37** ;
-- taux d'atterrissage réussi : **95 %** ;
-- longueur moyenne : **457 pas** ;
-- proxy carburant moyen : **67,31**.
+- récompense moyenne : **249,28** ;
+- écart-type : **48,56** ;
+- taux d'atterrissage réussi : **96 %** ;
+- longueur moyenne : **327 pas** ;
+- proxy carburant moyen : **47,81**.
+
+La recherche comprend 20 trials TPE, une grille de 9 valeurs autour de
+`gamma=0.999`, puis une validation des trois meilleurs réglages sur trois seeds.
+Le réglage final utilise notamment `gamma=0.9992` et `learning_rate≈9,90e-4`.
 
 ## Livrables
 
@@ -20,7 +24,7 @@ Le pilote retenu est un agent PPO avec `gamma=0.999`. Son évaluation finale sur
 | API | [`api/app.py`](api/app.py) |
 | GUI | [`gui/app.py`](gui/app.py) |
 | Dashboard | [`dashboard/app.py`](dashboard/app.py) |
-| Modèle | [`artifacts/models/ppo_gamma_extended/best_model.zip`](artifacts/models/ppo_gamma_extended/best_model.zip) |
+| Modèle | [`artifacts/models/ppo_optuna/best_model.zip`](artifacts/models/ppo_optuna/best_model.zip) |
 
 ## Installation
 
@@ -31,6 +35,34 @@ uv sync --dev
 ```
 
 ## Lancement
+
+### Démonstration complète — commande recommandée
+
+Depuis la racine du projet, cette commande démarre les trois services, contrôle
+leur disponibilité et ouvre automatiquement leurs pages dans le navigateur :
+
+```bash
+uv run python launch_demo.py
+```
+
+Le lanceur affiche les URL et conserve les sorties dans
+`ASTRODYNAMICS/artifacts/demo_logs/<date>-<heure>/`. `Ctrl+C` arrête ensemble
+l'API, la GUI et le dashboard. Si un port par défaut est occupé, le prochain
+port libre est sélectionné automatiquement.
+
+En environnement distant ou sans navigateur :
+
+```bash
+uv run python launch_demo.py --no-browser
+```
+
+Les ports sont personnalisables si nécessaire, par exemple :
+
+```bash
+uv run python launch_demo.py --api-port 8010 --gui-port 8511 --dashboard-port 8512
+```
+
+### Lancement manuel
 
 ### API
 
@@ -83,5 +115,7 @@ Les tests vérifient notamment :
 - `evaluations/*/episodes.csv` ;
 - `evaluations/*/steps.csv` ;
 - `evaluations/*/during_training/evaluations.npz` ;
+- `optuna/ppo_lunarlander/trials.csv` et `study.db` ;
+- `optuna/ppo_lunarlander/gamma_focus/` ;
+- `optuna/ppo_lunarlander/robustness.csv` ;
 - `gui_runs/runs.csv` après utilisation de la GUI.
-

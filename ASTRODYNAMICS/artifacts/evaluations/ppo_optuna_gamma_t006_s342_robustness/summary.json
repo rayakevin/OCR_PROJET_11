@@ -1,0 +1,15 @@
+{
+  "evaluation_id": "ppo_optuna_gamma_t006_s342_robustness",
+  "algorithm": "PPO",
+  "n_episodes": 30,
+  "seed_start": 3000,
+  "mean_reward": 233.96432498055592,
+  "std_reward": 43.22042614616465,
+  "median_reward": 240.74386386107642,
+  "min_reward": 28.75633940438854,
+  "max_reward": 286.58655268787913,
+  "success_rate": 0.9666666666666667,
+  "mean_episode_length": 424.3333333333333,
+  "mean_fuel_proxy": 63.61299999999986,
+  "evaluated_at_utc": "2026-07-17T14:14:19.793844+00:00"
+}

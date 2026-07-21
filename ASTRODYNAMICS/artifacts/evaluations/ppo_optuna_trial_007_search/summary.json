@@ -1,0 +1,15 @@
+{
+  "evaluation_id": "ppo_optuna_trial_007_search",
+  "algorithm": "PPO",
+  "n_episodes": 20,
+  "seed_start": 2000,
+  "mean_reward": -1178.5083747167594,
+  "std_reward": 481.10903694943414,
+  "median_reward": -1137.986066145174,
+  "min_reward": -2303.108710487931,
+  "max_reward": -362.595579069349,
+  "success_rate": 0.0,
+  "mean_episode_length": 332.15,
+  "mean_fuel_proxy": 73.53599999999975,
+  "evaluated_at_utc": "2026-07-17T13:30:20.282453+00:00"
+}

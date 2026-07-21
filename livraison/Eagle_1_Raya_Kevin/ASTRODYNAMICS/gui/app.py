@@ -29,6 +29,49 @@ ACTION_LABELS = {
     3: "Orientation droite",
 }
 
+APP_STYLES = """
+<style>
+    :root {
+        --ad-ink: #17242d;
+        --ad-navy: #12384a;
+        --ad-blue: #176780;
+        --ad-orange: #c26a2e;
+        --ad-line: #cbd5da;
+        --ad-surface: #f4f6f7;
+    }
+    .stApp { background: var(--ad-surface); color: var(--ad-ink); }
+    [data-testid="stHeader"] { background: rgba(244, 246, 247, 0.96); }
+    [data-testid="stSidebar"] { background: #e8edef; border-right: 1px solid var(--ad-line); }
+    .block-container { max-width: 1380px; padding-top: 2rem; padding-bottom: 3rem; }
+    .mission-header { border-top: 4px solid var(--ad-orange); border-bottom: 1px solid var(--ad-line); padding: 1rem 0 1.1rem; margin-bottom: 1.4rem; }
+    .mission-header .kicker { color: var(--ad-blue); font-size: .74rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+    .mission-header h1 { color: var(--ad-navy); font-size: 2.1rem; font-weight: 650; letter-spacing: -.02em; margin: .25rem 0; }
+    .mission-header p { color: #52636d; margin: 0; font-size: .96rem; }
+    [data-testid="stMetric"] { background: #fff; border: 1px solid var(--ad-line); border-radius: 2px; padding: .75rem .9rem; }
+    [data-testid="stMetricLabel"] { color: #5b6a73; }
+    .stButton > button { border-radius: 2px; border: 1px solid var(--ad-navy); font-weight: 650; }
+    .stButton > button[kind="primary"] { background: var(--ad-navy); color: #fff; }
+    .stButton > button[kind="primary"]:hover { background: var(--ad-blue); border-color: var(--ad-blue); }
+    div[data-testid="stImage"] img { border: 1px solid var(--ad-line); }
+    h2, h3 { color: var(--ad-navy); font-weight: 650; }
+</style>
+"""
+
+
+def render_header() -> None:
+    """Affiche une identité sobre inspirée d'un pupitre de contrôle."""
+    st.markdown(APP_STYLES, unsafe_allow_html=True)
+    st.markdown(
+        """
+        <header class="mission-header">
+            <div class="kicker">AstroDynamics / Flight Control</div>
+            <h1>Eagle-1</h1>
+            <p>Simulation du pilote automatique d'atterrissage lunaire</p>
+        </header>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 @dataclass
 class EpisodeResult:
@@ -224,12 +267,12 @@ def save_run(
 
 
 def main() -> None:
-    st.set_page_config(page_title="Eagle-1", page_icon="🚀", layout="wide")
-    st.title("🚀 Eagle-1 — Pilote automatique lunaire")
-    st.caption("La GUI visualise l'environnement ; toutes les décisions viennent de l'API FastAPI.")
+    st.set_page_config(page_title="Eagle-1 | Flight Control", layout="wide")
+    render_header()
+    st.caption("La simulation exécute LunarLander-v3 ; chaque décision est fournie par l'API FastAPI.")
 
     with st.sidebar:
-        st.header("Simulation")
+        st.header("Paramètres de vol")
         api_url = st.text_input("URL de l'API", DEFAULT_API_URL)
         seed = int(st.number_input("Seed", min_value=0, value=10_000, step=1))
         duration_seconds = st.slider(
@@ -240,14 +283,14 @@ def main() -> None:
             step=5,
         )
 
-        if st.button("Vérifier l'API", use_container_width=True):
+        if st.button("Vérifier l'API", width="stretch"):
             try:
                 health = check_api(api_url)
                 st.success(f"API prête — {health['model_id']}")
             except Exception as exc:
                 st.error(f"API indisponible : {exc}")
 
-        launch = st.button("▶ Lancer un épisode", type="primary", use_container_width=True)
+        launch = st.button("Lancer la simulation", type="primary", width="stretch")
 
     frame_box = st.empty()
     metric_boxes = st.columns(4)
@@ -257,7 +300,7 @@ def main() -> None:
         return
 
     def update_screen(frame: np.ndarray, row: dict) -> None:
-        frame_box.image(frame, channels="RGB", use_container_width=True)
+        frame_box.image(frame, channels="RGB", width="stretch")
         metric_boxes[0].metric("Pas", row["step"])
         metric_boxes[1].metric("Action", row["action_label"])
         metric_boxes[2].metric("Récompense", f"{row['cumulative_reward']:.1f}")
@@ -298,7 +341,7 @@ def main() -> None:
         st.bar_chart(action_counts)
 
     with st.expander("Télémétrie détaillée"):
-        st.dataframe(steps, use_container_width=True)
+        st.dataframe(steps, width="stretch")
     st.caption(f"Run sauvegardé dans : {run_dir}")
 
 

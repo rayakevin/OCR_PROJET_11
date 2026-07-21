@@ -22,7 +22,7 @@ from stable_baselines3 import PPO
 
 
 ENV_ID = "LunarLander-v3"
-MODEL_ID = "ppo_gamma_extended"
+MODEL_ID = "ppo_optuna"
 ACTION_LABELS = {
     0: "ne rien faire",
     1: "moteur d'orientation gauche",
@@ -130,4 +130,3 @@ def predict(payload: StateRequest, request: Request) -> ActionResponse:
 def play(payload: StateRequest, request: Request) -> ActionResponse:
     """Alias explicite de /predict destiné aux clients de simulation."""
     return predict_action(payload, request)
-
