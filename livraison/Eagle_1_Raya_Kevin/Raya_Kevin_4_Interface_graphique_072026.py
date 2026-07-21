@@ -29,6 +29,85 @@ ACTION_LABELS = {
     3: "Orientation droite",
 }
 
+# --- Habillage de la visualisation ------------------------------------------
+#
+# Le rendu natif de Gymnasium est volontairement minimal : ciel noir uni, sol
+# blanc, aucune indication de la cible. On le retouche à la volée pour rendre
+# la scène plus lisible, sans jamais toucher à la simulation elle-même.
+#
+# Deux pistes ont été écartées :
+#   - augmenter la résolution native en multipliant VIEWPORT_W/H et SCALE :
+#     mesuré, cela change la taille physique du module et donc la trajectoire ;
+#   - agrandir l'image côté Python : à 130 ms par image, cela plafonnait le
+#     rejeu à 7 images/seconde. Le navigateur agrandit très bien lui-même.
+
+GLOW_HEIGHT = 54  # hauteur, en pixels, du halo au-dessus de l'aire d'atterrissage
+_SKY_GRADIENT = None
+_PAD_OVERLAY = None
+
+
+def landing_pad_pixels() -> tuple[int, int, int]:
+    """Position de l'aire d'atterrissage en pixels, déduite de l'environnement.
+
+    Les coordonnées viennent des constantes de `lunar_lander` plutôt que d'être
+    codées en dur : si Gymnasium change sa géométrie, le repère suit.
+    """
+    import gymnasium.envs.box2d.lunar_lander as lunar
+
+    chunks = 11
+    world_width = lunar.VIEWPORT_W / lunar.SCALE
+    world_height = lunar.VIEWPORT_H / lunar.SCALE
+    chunk_x = [world_width / (chunks - 1) * i for i in range(chunks)]
+    x1 = int(chunk_x[chunks // 2 - 1] * lunar.SCALE)
+    x2 = int(chunk_x[chunks // 2 + 1] * lunar.SCALE)
+    y = int(lunar.VIEWPORT_H - (world_height / 4) * lunar.SCALE)
+    return x1, x2, y
+
+
+def _build_overlays(height: int, width: int) -> None:
+    """Précalcule le dégradé de ciel et le repère d'atterrissage."""
+    global _SKY_GRADIENT, _PAD_OVERLAY
+    from PIL import Image, ImageDraw
+
+    top = np.array([13, 22, 46], dtype=np.float32)
+    bottom = np.array([3, 4, 10], dtype=np.float32)
+    ratio = np.linspace(0, 1, height, dtype=np.float32)[:, None, None]
+    _SKY_GRADIENT = (top * (1 - ratio) + bottom * ratio).astype(np.uint8).repeat(width, axis=1)
+
+    x1, x2, pad_y = landing_pad_pixels()
+    overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    # Une ligne par pixel : dessiner une ligne sur deux laisse des rayures.
+    for offset in range(GLOW_HEIGHT):
+        alpha = int(46 * (1 - offset / GLOW_HEIGHT) ** 1.6)
+        draw.line([(x1, pad_y - offset), (x2, pad_y - offset)], fill=(42, 120, 214, alpha))
+    draw.rectangle([x1, pad_y - 1, x2, pad_y + 1], fill=(96, 176, 255, 215))
+    _PAD_OVERLAY = overlay
+
+
+def enhance_frame(frame: np.ndarray) -> np.ndarray:
+    """Remplace le ciel noir par un dégradé et matérialise l'aire visée.
+
+    Coût mesuré : environ 6 ms par image, ce qui laisse la marge nécessaire
+    pour un rejeu fluide.
+    """
+    from PIL import Image
+
+    height, width, _ = frame.shape
+    if _SKY_GRADIENT is None or _SKY_GRADIENT.shape[:2] != (height, width):
+        _build_overlays(height, width)
+
+    enhanced = frame.copy()
+    # Seuls les pixels quasi noirs sont du ciel : le sol et le module sont
+    # laissés intacts.
+    sky = enhanced.sum(axis=2, dtype=np.int16) < 26
+    enhanced[sky] = _SKY_GRADIENT[sky]
+
+    composed = Image.alpha_composite(
+        Image.fromarray(enhanced).convert("RGBA"), _PAD_OVERLAY
+    )
+    return np.asarray(composed.convert("RGB"))
+
 APP_STYLES = """
 <style>
     :root {
@@ -184,12 +263,23 @@ def replay_episode(
     steps: pd.DataFrame,
     duration_seconds: float,
     on_frame: Callable[[np.ndarray, dict], None],
-    target_ui_fps: float = 10.0,
+    target_ui_fps: float = 24.0,
 ) -> None:
     """Rejoue les actions de l'API pendant la durée de visualisation demandée.
 
     La simulation est déterministe : même seed et mêmes actions donnent le même vol.
-    Le nombre d'images est choisi automatiquement pour ne pas surcharger Streamlit.
+
+    Le nombre d'images vaut ``min(len(steps), ceil(duration_seconds *
+    target_ui_fps))``. À 24 images par seconde, un vol d'environ 260 pas est
+    rendu presque intégralement sur 10 secondes ; à 10 images par seconde, plus
+    de la moitié des pas étaient sautés et le vol paraissait saccadé.
+
+    Avec une durée nulle, seule la dernière image est rendue — c'est le cas
+    utilisé par les tests.
+
+    :param on_frame: appelé avec l'image RGB et la ligne de télémétrie du pas.
+    :raises ValueError: si ``steps`` est vide ou la durée négative.
+    :raises RuntimeError: si le rejeu ne reproduit pas l'épisode enregistré.
     """
     if steps.empty:
         raise ValueError("Aucune action à rejouer.")
@@ -228,7 +318,7 @@ def replay_episode(
                 if remaining > 0:
                     time.sleep(remaining)
 
-            on_frame(env.render(), row.to_dict())
+            on_frame(enhance_frame(env.render()), row.to_dict())
             displayed_frames += 1
 
         if not (terminated or truncated):
@@ -306,7 +396,11 @@ def main() -> None:
     charts_box = st.empty()
 
     st.subheader("Vol en direct")
-    frame_box = st.empty()
+    # L'image native fait 600x400 : l'étaler sur toute la largeur la rend floue.
+    # Une colonne centrale la maintient proche de sa résolution d'origine.
+    _, viewport, _ = st.columns([1, 4, 1])
+    with viewport:
+        frame_box = st.empty()
     metric_boxes = st.columns(4)
 
     if not launch:
