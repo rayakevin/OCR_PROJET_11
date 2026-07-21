@@ -30,9 +30,11 @@ L'interface est disponible par défaut sur `http://localhost:8501`.
 
 - contrôle de la disponibilité de l'API ;
 - choix de la seed ;
-- choix de la durée de visualisation, de 5 à 60 secondes ;
+- choix de la durée de visualisation, de 5 à 60 secondes (10 s par défaut) ;
 - calcul des actions par l'API, puis rejeu déterministe du même vol ;
 - affichage de l'action, de la récompense et de l'altitude ;
+- bilan du vol et graphiques affichés **en haut de page**, pour être lus sans
+  avoir à faire défiler la télémétrie ;
 - résumé de la réussite, du nombre de pas et du proxy carburant ;
 - graphiques de récompense et de distribution des actions ;
 - sauvegarde automatique du résumé et de la télémétrie dans

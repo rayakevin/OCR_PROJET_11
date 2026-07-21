@@ -283,8 +283,10 @@ def main() -> None:
             "Durée de visualisation (secondes)",
             min_value=5,
             max_value=60,
-            value=25,
+            value=10,
             step=5,
+            help="Durée du rejeu à l'écran. Elle ne change ni les décisions de "
+                 "l'agent ni le résultat du vol, seulement la vitesse d'affichage.",
         )
 
         if st.button("Vérifier l'API", width="stretch"):
@@ -296,6 +298,14 @@ def main() -> None:
 
         launch = st.button("Lancer la simulation", type="primary", width="stretch")
 
+    # Le bilan et les courbes sont réservés en haut de page : après un vol, on
+    # veut les lire immédiatement, sans faire défiler toute la télémétrie. Ces
+    # emplacements restent vides pendant la simulation et sont remplis à la fin.
+    status_box = st.empty()
+    summary_box = st.empty()
+    charts_box = st.empty()
+
+    st.subheader("Vol en direct")
     frame_box = st.empty()
     metric_boxes = st.columns(4)
 
@@ -325,24 +335,28 @@ def main() -> None:
         return
 
     run_dir = save_run(result, steps)
+
     if result.success:
-        st.success(f"Atterrissage réussi — récompense {result.total_reward:.1f}")
+        status_box.success(f"Atterrissage réussi — récompense {result.total_reward:.1f}")
     else:
-        st.error(f"Épisode terminé : {result.outcome} — récompense {result.total_reward:.1f}")
+        status_box.error(
+            f"Épisode terminé : {result.outcome} — récompense {result.total_reward:.1f}"
+        )
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Récompense totale", f"{result.total_reward:.1f}")
-    col2.metric("Nombre de pas", result.steps)
-    col3.metric("Proxy carburant", f"{result.fuel_proxy:.1f}")
+    with summary_box.container():
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Récompense totale", f"{result.total_reward:.1f}")
+        col2.metric("Nombre de pas", result.steps)
+        col3.metric("Proxy carburant", f"{result.fuel_proxy:.1f}")
 
-    chart_col, action_col = st.columns(2)
-    with chart_col:
-        st.subheader("Récompense cumulée")
-        st.line_chart(steps.set_index("step")["cumulative_reward"])
-    with action_col:
-        st.subheader("Actions utilisées")
-        action_counts = steps["action_label"].value_counts()
-        st.bar_chart(action_counts)
+    with charts_box.container():
+        chart_col, action_col = st.columns(2)
+        with chart_col:
+            st.subheader("Récompense cumulée")
+            st.line_chart(steps.set_index("step")["cumulative_reward"])
+        with action_col:
+            st.subheader("Actions utilisées")
+            st.bar_chart(steps["action_label"].value_counts())
 
     with st.expander("Télémétrie détaillée"):
         st.dataframe(steps, width="stretch")
