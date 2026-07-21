@@ -108,6 +108,151 @@ def enhance_frame(frame: np.ndarray) -> np.ndarray:
     )
     return np.asarray(composed.convert("RGB"))
 
+# --- Rendu « arcade » --------------------------------------------------------
+#
+# Un second style de visualisation, dessiné intégralement à partir de l'état de
+# la simulation : relief, position et angle du module, moteur allumé, contacts.
+# La physique n'est pas touchée — c'est uniquement une couche d'affichage, et
+# les chiffres de la mission restent ceux de `LunarLander-v3`.
+#
+# Rien d'équivalent n'existe publiquement : les projets LunarLander se
+# concentrent sur les algorithmes et gardent le rendu d'origine. Les banques de
+# sprites libres (Kenney, CC0) proposent des vaisseaux vus de dessus, qui
+# cadrent mal avec une vue de profil munie de pattes d'atterrissage.
+
+ARCADE_W, ARCADE_H = 1200, 800
+_ARCADE_BACKGROUND: dict[int, np.ndarray] = {}
+
+
+def _world_to_pixels(x: float, y: float) -> tuple[float, float]:
+    """Convertit des coordonnées monde en pixels de la toile arcade."""
+    import gymnasium.envs.box2d.lunar_lander as lunar
+
+    kx = ARCADE_W / (lunar.VIEWPORT_W / lunar.SCALE)
+    ky = ARCADE_H / (lunar.VIEWPORT_H / lunar.SCALE)
+    return x * kx, ARCADE_H - y * ky
+
+
+def _arcade_background(env, seed: int) -> np.ndarray:
+    """Compose le décor fixe de l'épisode : ciel, étoiles, relief, piste.
+
+    Tout cela est immobile pendant un vol : le calculer une seule fois fait
+    tomber le coût par image d'environ 23 ms à quelques millisecondes.
+    """
+    if seed in _ARCADE_BACKGROUND:
+        return _ARCADE_BACKGROUND[seed]
+
+    from PIL import Image, ImageDraw, ImageFilter
+
+    unwrapped = env.unwrapped
+
+    top = np.array([16, 24, 54], dtype=np.float32)
+    bottom = np.array([4, 6, 14], dtype=np.float32)
+    ratio = np.linspace(0, 1, ARCADE_H, dtype=np.float32)[:, None, None]
+    sky = (top * (1 - ratio) + bottom * ratio).astype(np.uint8).repeat(ARCADE_W, axis=1)
+    image = Image.fromarray(sky)
+    draw = ImageDraw.Draw(image)
+
+    # Champ d'étoiles : trois tailles pour suggérer la profondeur.
+    generator = np.random.default_rng(seed)
+    for count, size, brightness in ((150, 1, 90), (70, 2, 150), (25, 3, 230)):
+        for x, y in zip(generator.uniform(0, ARCADE_W, count),
+                        generator.uniform(0, ARCADE_H * 0.8, count)):
+            draw.ellipse([x - size, y - size, x + size, y + size],
+                         fill=(brightness, brightness, min(255, brightness + 20)))
+
+    # Halo au-dessus de l'aire visée : trapèze qui se resserre, puis flou large.
+    # Un rectangle net laisserait une arête visible dans le ciel.
+    x1, pad_y = _world_to_pixels(unwrapped.helipad_x1, unwrapped.helipad_y)
+    x2, _ = _world_to_pixels(unwrapped.helipad_x2, unwrapped.helipad_y)
+    glow = Image.new("RGBA", (ARCADE_W, ARCADE_H), (0, 0, 0, 0))
+    glow_draw = ImageDraw.Draw(glow)
+    height = 190
+    for offset in range(height):
+        share = offset / height
+        inset = (x2 - x1) * 0.30 * share
+        glow_draw.line([(x1 + inset, pad_y - offset), (x2 - inset, pad_y - offset)],
+                       fill=(70, 155, 255, int(34 * (1 - share) ** 1.5)))
+    image = Image.alpha_composite(
+        image.convert("RGBA"), glow.filter(ImageFilter.GaussianBlur(28))
+    ).convert("RGB")
+    draw = ImageDraw.Draw(image)
+
+    # Relief. `sky_polys` décrit le CIEL, de la crête jusqu'en haut : le sol est
+    # son complément, reconstruit depuis l'arête basse de ces polygones.
+    ridge = [polygon[0] for polygon in unwrapped.sky_polys] + [unwrapped.sky_polys[-1][1]]
+    ridge_pixels = [_world_to_pixels(x, y) for x, y in ridge]
+    draw.polygon(ridge_pixels + [(ARCADE_W, ARCADE_H), (0, ARCADE_H)], fill=(46, 48, 60))
+    draw.line(ridge_pixels, fill=(188, 198, 220), width=4)
+
+    draw.line([(x1, pad_y), (x2, pad_y)], fill=(120, 200, 255), width=5)
+    for index in range(5):
+        beacon = x1 + (x2 - x1) * index / 4
+        draw.ellipse([beacon - 4, pad_y - 4, beacon + 4, pad_y + 4], fill=(190, 230, 255))
+
+    _ARCADE_BACKGROUND[seed] = np.asarray(image)
+    return _ARCADE_BACKGROUND[seed]
+
+
+def render_arcade(env, seed: int, action: int, contact: bool) -> np.ndarray:
+    """Dessine la scène complète : décor mémorisé plus module et moteurs."""
+    from PIL import Image, ImageDraw
+
+    image = Image.fromarray(_arcade_background(env, seed).copy())
+    draw = ImageDraw.Draw(image)
+
+    body = env.unwrapped.lander
+    cx, cy = _world_to_pixels(body.position.x, body.position.y)
+    angle = -body.angle
+    cos_a, sin_a = np.cos(angle), np.sin(angle)
+
+    def point(dx: float, dy: float) -> tuple[float, float]:
+        return cx + (dx * cos_a - dy * sin_a), cy + (dx * sin_a + dy * cos_a)
+
+    # Flammes d'abord : elles doivent passer derrière la structure.
+    if action == 2:
+        draw.polygon([point(-16, 26), point(16, 26), point(0, 78)], fill=(255, 170, 60))
+        draw.polygon([point(-8, 22), point(8, 22), point(0, 52)], fill=(255, 236, 190))
+    elif action in (1, 3):
+        side = -1 if action == 3 else 1
+        draw.polygon([point(side * 26, -4), point(side * 26, 10), point(side * 62, 4)],
+                     fill=(255, 190, 90))
+
+    draw.polygon([point(-30, -22), point(-34, 10), point(0, 26), point(34, 10), point(30, -22)],
+                 fill=(126, 116, 214), outline=(196, 190, 255))
+    draw.polygon([point(-20, -12), point(-22, 4), point(0, 12), point(22, 4), point(20, -12)],
+                 fill=(154, 146, 236))
+    draw.ellipse([cx - 12, cy - 14, cx + 12, cy + 10],
+                 fill=(210, 232, 255), outline=(120, 150, 200))
+    for side in (-1, 1):
+        draw.line([point(side * 26, 16), point(side * 44, 46)], fill=(176, 170, 226), width=7)
+        draw.line([point(side * 34, 46), point(side * 54, 46)], fill=(196, 190, 255), width=6)
+
+    if contact:
+        for side in (-1, 1):
+            fx, fy = point(side * 44, 48)
+            draw.ellipse([fx - 26, fy - 8, fx + 26, fy + 8], fill=(120, 120, 140))
+
+    return np.asarray(image)
+
+
+RENDER_STYLES = {
+    "Amélioré": "Rendu de Gymnasium, ciel dégradé et aire d'atterrissage matérialisée.",
+    "Arcade": "Scène redessinée en 1200×800 : étoiles, relief ombré, module et moteurs.",
+    "Natif": "Rendu brut de Gymnasium, sans retouche.",
+}
+
+
+def render_frame(env, row: dict, seed: int, style: str) -> np.ndarray:
+    """Produit l'image d'un pas selon le style choisi."""
+    if style == "Natif":
+        return env.render()
+    if style == "Arcade":
+        contact = bool(row.get("left_contact", 0) or row.get("right_contact", 0))
+        return render_arcade(env, seed, int(row["action"]), contact)
+    return enhance_frame(env.render())
+
+
 APP_STYLES = """
 <style>
     :root {
@@ -264,6 +409,7 @@ def replay_episode(
     duration_seconds: float,
     on_frame: Callable[[np.ndarray, dict], None],
     target_ui_fps: float = 24.0,
+    render_style: str = "Amélioré",
 ) -> None:
     """Rejoue les actions de l'API pendant la durée de visualisation demandée.
 
@@ -297,6 +443,8 @@ def replay_episode(
         else set(np.linspace(0, len(steps) - 1, num=frame_count, dtype=int).tolist())
     )
 
+    # Le style « Arcade » dessine depuis l'état et n'a pas besoin du rendu
+    # natif, mais le mode rgb_array reste demandé pour les deux autres styles.
     env = gym.make(ENV_ID, render_mode="rgb_array")
     env.reset(seed=seed)
     terminated = truncated = False
@@ -318,7 +466,8 @@ def replay_episode(
                 if remaining > 0:
                     time.sleep(remaining)
 
-            on_frame(enhance_frame(env.render()), row.to_dict())
+            data = row.to_dict()
+            on_frame(render_frame(env, data, seed, render_style), data)
             displayed_frames += 1
 
         if not (terminated or truncated):
@@ -369,6 +518,13 @@ def main() -> None:
             help="Valeur par défaut issue de la variable d'environnement EAGLE1_API_URL.",
         )
         seed = int(st.number_input("Seed", min_value=0, value=10_000, step=1))
+        render_style = st.selectbox(
+            "Style de rendu",
+            list(RENDER_STYLES),
+            help="Change uniquement l'affichage : la simulation, les décisions "
+                 "de l'agent et le résultat du vol sont identiques.",
+        )
+        st.caption(RENDER_STYLES[render_style])
         duration_seconds = st.slider(
             "Durée de visualisation (secondes)",
             min_value=5,
@@ -423,6 +579,7 @@ def main() -> None:
                 steps=steps,
                 duration_seconds=float(duration_seconds),
                 on_frame=update_screen,
+                render_style=render_style,
             )
     except Exception as exc:
         st.error(f"La simulation a échoué : {exc}")

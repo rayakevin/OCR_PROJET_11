@@ -1,0 +1,10 @@
+{
+  "run_id": "20260721T124934Z_seed554",
+  "seed": 554,
+  "total_reward": 243.92106831735651,
+  "steps": 254,
+  "outcome": "success",
+  "success": true,
+  "final_reward": 100.0,
+  "fuel_proxy": 35.73000000000006
+}
