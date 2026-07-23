@@ -60,10 +60,6 @@ APP_STYLES = """
     .stTabs [data-baseweb="tab"] { border-radius: 0; padding: .65rem 1.05rem; }
     .stTabs [aria-selected="true"] { color: var(--ad-navy); border-bottom: 3px solid var(--ad-orange); }
     h2, h3 { color: var(--ad-navy); font-weight: 650; }
-    .hero-figure { font-size: 3.4rem; font-weight: 680; color: var(--ad-navy); line-height: 1; letter-spacing: -.03em; }
-    .hero-caption { color: #52636d; font-size: .95rem; margin-top: .35rem; }
-    .readme { background: #fff; border: 1px solid var(--ad-line); border-left: 3px solid var(--ad-blue); padding: .9rem 1.1rem; margin-bottom: 1.2rem; }
-    .readme p { margin: .25rem 0; color: #3d4d57; font-size: .95rem; }
 </style>
 """
 
@@ -91,22 +87,6 @@ PHASE_ORDER = [
     "5 · Sélection sur seeds communes",
     "6 · Évaluation finale",
 ]
-
-METRIC_HELP = {
-    "mean": "Moyenne des récompenses sur tous les épisodes. Au-dessus de 200, "
-            "l'atterrissage est considéré comme maîtrisé.",
-    "std": "Écart-type : à quel point les épisodes se ressemblent. Plus il est "
-           "bas, plus le pilote est régulier.",
-    "success": "Part des épisodes terminés par un atterrissage stable entre les "
-               "drapeaux.",
-    "worst": "Récompense du plus mauvais épisode. C'est l'indicateur de "
-             "fiabilité : une bonne moyenne peut cacher un vol raté.",
-    "length": "Nombre de pas de simulation avant la fin de l'épisode. Plus court "
-              "signifie un atterrissage plus direct.",
-    "fuel": "Estimation de la consommation, calculée à partir des allumages "
-            "moteur. Plus bas est mieux.",
-}
-
 
 def experiment_of(evaluation_id: str) -> str:
     """Retrouve l'expérience d'origine à partir d'un identifiant d'évaluation."""
@@ -139,7 +119,7 @@ def render_header() -> None:
         <header class="mission-header">
             <div class="kicker">AstroDynamics / Mission Analytics</div>
             <h1>Eagle-1 — Analyse des performances</h1>
-            <p>Entraînements, évaluations, trajectoires et simulations opérateur</p>
+            <p>PPO · LunarLander-v3 · 268,98 ± 37,46 sur 100 épisodes réservés</p>
         </header>
         """,
         unsafe_allow_html=True,
@@ -343,69 +323,34 @@ def outcome_colors(values) -> dict[str, str]:
 OUTCOME_LABELS = {"success": "Réussite", "crash": "Échec", "truncated": "Temps écoulé"}
 
 
-def render_essentials(registry: pd.DataFrame, artifacts_dir: Path) -> None:
-    """Répond à « ça marche, oui ou non ? » pour un lecteur qui découvre."""
+def render_summary(registry: pd.DataFrame, artifacts_dir: Path) -> None:
+    """Indicateurs finaux et positionnement face aux points de comparaison."""
     final = registry[registry["evaluation_id"] == FINAL_EVALUATION_ID]
     if final.empty:
-        st.warning("L'évaluation finale n'est pas disponible.")
+        st.warning("Évaluation finale indisponible.")
         return
     final = final.iloc[0]
     episodes = load_episodes(FINAL_EVALUATION_ID, artifacts_dir)
 
-    st.markdown(
-        """
-        <div class="readme">
-        <p><strong>De quoi s'agit-il ?</strong> Un pilote automatique doit poser
-        un module lunaire entre deux drapeaux, dans le simulateur
-        <code>LunarLander-v3</code>. À chaque instant il choisit parmi quatre
-        actions : ne rien faire, ou allumer l'un des trois moteurs.</p>
-        <p><strong>Comment lit-on le score ?</strong> Chaque atterrissage rapporte
-        une récompense : positive s'il est réussi et économe, négative en cas de
-        crash ou de gaspillage de carburant. <strong>La mission est validée
-        au-dessus de 200 de moyenne sur 100 atterrissages.</strong></p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    cols = st.columns(4)
+    cols[0].metric("Récompense moyenne", f"{final['mean_reward']:.2f}",
+                   delta=f"{final['mean_reward'] - TARGET_REWARD:+.1f} / seuil 200")
+    cols[1].metric("Écart-type", f"{final['std_reward']:.2f}")
+    cols[2].metric("Médiane", f"{episodes['total_reward'].median():.2f}")
+    cols[3].metric("Taux de réussite", f"{final['success_percent']:.0f} %")
+    cols = st.columns(4)
+    cols[0].metric("Pire épisode", f"{episodes['total_reward'].min():.2f}")
+    cols[1].metric("Longueur moyenne", f"{final['mean_episode_length']:.1f} pas")
+    cols[2].metric("Proxy carburant", f"{final['mean_fuel_proxy']:.2f}")
+    cols[3].metric("Épisodes", f"{int(final['n_episodes'])} · seeds 10000+")
 
-    left, right = st.columns([1, 2])
-    with left:
-        st.markdown(
-            f'<div class="hero-figure">{final["mean_reward"]:.0f}</div>'
-            f'<div class="hero-caption">récompense moyenne sur 100 atterrissages<br>'
-            f'objectif : 200 — dépassé de {final["mean_reward"] - TARGET_REWARD:.0f} points</div>',
-            unsafe_allow_html=True,
-        )
-    with right:
-        st.markdown("&nbsp;", unsafe_allow_html=True)
-        cols = st.columns(3)
-        cols[0].metric("Régularité (écart-type)", f"± {final['std_reward']:.0f}",
-                       help=METRIC_HELP["std"])
-        cols[1].metric("Atterrissages réussis", f"{final['success_percent']:.0f} %",
-                       help=METRIC_HELP["success"])
-        cols[2].metric("Pire épisode", f"{episodes['total_reward'].min():.0f}",
-                       help=METRIC_HELP["worst"])
-        cols = st.columns(3)
-        cols[0].metric("Durée moyenne", f"{final['mean_episode_length']:.0f} pas",
-                       help=METRIC_HELP["length"])
-        cols[1].metric("Carburant estimé", f"{final['mean_fuel_proxy']:.1f}",
-                       help=METRIC_HELP["fuel"])
-        cols[2].metric("Épisodes évalués", f"{int(final['n_episodes'])}",
-                       help="Tous joués sur des seeds réservées, jamais vues pendant l'entraînement.")
-
-    st.markdown("### Le pilote final face à ses points de comparaison")
-    st.caption(
-        "Chaque barre est une politique évaluée dans les mêmes conditions. "
-        "Le pilote retenu est en couleur, les points de comparaison en gris."
-    )
-
+    st.markdown("#### Récompense moyenne par politique")
     reference_ids = [
         "random_baseline", "dqn_default_baseline", "ppo_default_baseline",
         "ppo_gamma_extended_selection", FINAL_EVALUATION_ID,
     ]
     comparison = registry[registry["evaluation_id"].isin(reference_ids)].copy()
     comparison = comparison.sort_values("mean_reward")
-    # Emphase : une seule série porte l'information, le reste est contexte.
     comparison["couleur"] = np.where(
         comparison["evaluation_id"] == FINAL_EVALUATION_ID, SERIES_1, NEUTRAL
     )
@@ -417,38 +362,17 @@ def render_essentials(registry: pd.DataFrame, artifacts_dir: Path) -> None:
             orientation="h",
             marker_color=comparison["couleur"],
             error_x=dict(type="data", array=comparison["std_reward"], color="#b6bec4", thickness=1.5),
-            # Pas d'étiquette chiffrée sur chaque barre : la moustache
-            # d'écart-type traverse la zone du texte, et l'axe suffit à situer
-            # les valeurs. Le détail exact reste accessible au survol.
             hovertemplate="%{y}<br>moyenne %{x:.1f}<extra></extra>",
         )
     )
     add_target_line(fig, axis="x")
-    fig.update_layout(xaxis_title="Récompense moyenne", yaxis_title="", height=380)
+    fig.update_layout(xaxis_title="Récompense moyenne (± σ)", yaxis_title="", height=360)
     st.plotly_chart(thin_bars(style_figure(fig)), width="stretch")
-    st.caption(
-        "Les barres d'erreur montrent l'écart-type : une barre longue signifie "
-        "des résultats dispersés d'un atterrissage à l'autre."
-    )
 
 
 def render_phases(registry: pd.DataFrame, artifacts_dir: Path) -> None:
     """Montre la progression étape par étape, dans l'ordre chronologique."""
-    st.markdown("### Les six étapes de la mission")
-    st.caption(
-        "La mission progresse par étapes, chacune répondant à une question "
-        "précise. Le tableau ci-dessous donne le meilleur résultat atteint à "
-        "chaque étape."
-    )
-
-    descriptions = {
-        PHASE_ORDER[0]: "Que vaut un pilote qui appuie au hasard ? C'est le plancher.",
-        PHASE_ORDER[1]: "Que valent DQN et PPO avec leurs réglages d'usine, sans aucun ajustement ?",
-        PHASE_ORDER[2]: "Quel effet a un paramètre modifié seul, toutes choses égales par ailleurs ?",
-        PHASE_ORDER[3]: "Que trouve une recherche automatique explorant dix paramètres à la fois ?",
-        PHASE_ORDER[4]: "Rejoués sur les mêmes épisodes, lequel de tous les candidats gagne ?",
-        PHASE_ORDER[5]: "Le modèle retenu, mesuré une seule fois sur 100 épisodes réservés.",
-    }
+    st.markdown("#### Meilleur résultat par phase")
 
     ordered = [phase for phase in PHASE_ORDER if phase in set(registry["phase"])]
     rows = []
@@ -456,11 +380,10 @@ def render_phases(registry: pd.DataFrame, artifacts_dir: Path) -> None:
         subset = registry[registry["phase"] == phase]
         best = subset.loc[subset["mean_reward"].idxmax()]
         rows.append({
-            "Étape": phase,
-            "Question posée": descriptions.get(phase, ""),
-            "Meilleur de l'étape": best["label"],
-            "Récompense moyenne": round(best["mean_reward"], 1),
-            "Écart-type": round(best["std_reward"], 1),
+            "Phase": phase,
+            "Meilleure config": best["label"],
+            "Récompense": round(best["mean_reward"], 2),
+            "σ": round(best["std_reward"], 2),
             "Réussite": f"{best['success_percent']:.0f} %",
         })
     phase_table = pd.DataFrame(rows)
@@ -468,10 +391,10 @@ def render_phases(registry: pd.DataFrame, artifacts_dir: Path) -> None:
 
     fig = go.Figure(
         go.Bar(
-            x=phase_table["Étape"],
-            y=phase_table["Récompense moyenne"],
+            x=phase_table["Phase"],
+            y=phase_table["Récompense"],
             marker_color=[NEUTRAL] * (len(phase_table) - 1) + [SERIES_1],
-            text=[f"{value:.0f}" for value in phase_table["Récompense moyenne"]],
+            text=[f"{value:.0f}" for value in phase_table["Récompense"]],
             textposition="outside",
             hovertemplate="%{x}<br>meilleur : %{y:.1f}<extra></extra>",
         )
@@ -483,12 +406,7 @@ def render_phases(registry: pd.DataFrame, artifacts_dir: Path) -> None:
     )
     st.plotly_chart(thin_bars(style_figure(fig), 0.55), width="stretch")
 
-    st.markdown("### Progression pendant l'entraînement")
-    st.caption(
-        "Chaque point est une évaluation faite pendant l'apprentissage. "
-        "L'axe horizontal compte les transitions vues par l'agent : plus on va "
-        "à droite, plus il a d'expérience."
-    )
+    st.markdown("#### Courbes d'apprentissage (EvalCallback)")
 
     curves = load_learning_curves(artifacts_dir)
     if curves.empty:
@@ -500,7 +418,7 @@ def render_phases(registry: pd.DataFrame, artifacts_dir: Path) -> None:
     default = [name for name in ["dqn_default", "ppo_default", "ppo_gamma_extended", "ppo_optuna"]
                if name in set(curves["experiment"])]
     chosen = st.multiselect(
-        "Entraînements affichés",
+        "Expériences",
         options=sorted(curves["experiment"].unique()),
         default=default,
         format_func=lambda name: EXPERIMENT_LABELS.get(name, name),
@@ -531,11 +449,7 @@ def render_phases(registry: pd.DataFrame, artifacts_dir: Path) -> None:
 
 def render_comparison(registry: pd.DataFrame, artifacts_dir: Path) -> None:
     """Compare deux modèles terme à terme : chiffres, distribution, réglages."""
-    st.markdown("### Comparer deux modèles")
-    st.caption(
-        "Choisissez deux évaluations : le tableau de bord aligne leurs chiffres, "
-        "leurs distributions de récompense et leurs hyperparamètres."
-    )
+    st.markdown("#### Comparaison A / B")
 
     available = sorted(
         set(registry["evaluation_id"]) & set(list_episode_evaluations(artifacts_dir))
@@ -607,10 +521,6 @@ def render_comparison(registry: pd.DataFrame, artifacts_dir: Path) -> None:
                           yaxis_title="Nombre d'épisodes", height=420)
         add_target_line(fig, axis="x")
         st.plotly_chart(style_figure(fig), width="stretch")
-        st.caption(
-            "Deux histogrammes superposés. Une distribution resserrée et décalée "
-            "vers la droite est le signe d'un pilote à la fois bon et régulier."
-        )
     with right:
         curves = load_learning_curves(artifacts_dir)
         experiments = [experiment_of(choice_a), experiment_of(choice_b)]
@@ -634,16 +544,12 @@ def render_comparison(registry: pd.DataFrame, artifacts_dir: Path) -> None:
                               xaxis_title="Transitions d'entraînement",
                               yaxis_title="Récompense moyenne", height=420)
             st.plotly_chart(style_figure(fig), width="stretch")
-            st.caption(
-                "Attention aux budgets d'entraînement différents : une courbe "
-                "plus courte n'a simplement pas été entraînée aussi longtemps."
-            )
 
     configs = load_configs(artifacts_dir)
     config_a = configs.get(experiment_of(choice_a), {}).get("hyperparameters") or {}
     config_b = configs.get(experiment_of(choice_b), {}).get("hyperparameters") or {}
     if config_a or config_b:
-        st.markdown("#### Réglages des deux modèles")
+        st.markdown("#### Hyperparamètres")
         names = sorted(set(config_a) | set(config_b))
         table = pd.DataFrame({
             "Hyperparamètre": names,
@@ -652,15 +558,12 @@ def render_comparison(registry: pd.DataFrame, artifacts_dir: Path) -> None:
         })
         table["Identique"] = np.where(table["A"].astype(str) == table["B"].astype(str), "oui", "non")
         st.dataframe(table, width="stretch", hide_index=True)
-        st.caption(
-            "« défaut » signifie que l'hyperparamètre n'a pas été fixé et garde "
-            "la valeur par défaut de Stable-Baselines3."
-        )
+        st.caption("« défaut » : hyperparamètre non fixé, valeur par défaut de SB3.")
 
 
 def render_episodes(artifacts_dir: Path) -> None:
     """Permet d'isoler les réussites et les échecs d'une évaluation."""
-    st.markdown("### Explorer les épisodes un par un")
+    st.markdown("#### Épisodes filtrables")
     evaluations = list_episode_evaluations(artifacts_dir)
     default_index = evaluations.index(FINAL_EVALUATION_ID) if FINAL_EVALUATION_ID in evaluations else 0
 
@@ -693,19 +596,11 @@ def render_episodes(artifacts_dir: Path) -> None:
         st.warning("Aucun épisode ne correspond à ces filtres.")
         return
 
-    total_success = int((episodes["outcome"] == "success").sum())
-    total_failure = len(episodes) - total_success
-    st.caption(
-        f"Sur les {len(episodes)} épisodes de cette évaluation : "
-        f"✅ {total_success} réussis · ✖ {total_failure} non réussis. "
-        f"Filtre actif : {len(filtered)} épisodes affichés."
-    )
-
     cols = st.columns(5)
-    cols[0].metric("Épisodes affichés", len(filtered))
-    cols[1].metric("Moyenne", f"{filtered['total_reward'].mean():.1f}", help=METRIC_HELP["mean"])
-    cols[2].metric("Écart-type", f"± {filtered['total_reward'].std(ddof=0):.1f}", help=METRIC_HELP["std"])
-    cols[3].metric("Médiane", f"{filtered['total_reward'].median():.1f}")
+    cols[0].metric("Épisodes", f"{len(filtered)} / {len(episodes)}")
+    cols[1].metric("Moyenne", f"{filtered['total_reward'].mean():.2f}")
+    cols[2].metric("Écart-type", f"{filtered['total_reward'].std(ddof=0):.2f}")
+    cols[3].metric("Médiane", f"{filtered['total_reward'].median():.2f}")
     cols[4].metric("Min / Max",
                    f"{filtered['total_reward'].min():.0f} / {filtered['total_reward'].max():.0f}")
 
@@ -774,7 +669,7 @@ def render_episodes(artifacts_dir: Path) -> None:
 
 def render_trajectory(artifacts_dir: Path) -> None:
     """Déroule un vol pas à pas : altitude, vitesse, angle et décisions."""
-    st.markdown("### Le déroulé d'un vol")
+    st.markdown("#### Trajectoire pas à pas")
     available = [
         evaluation_id
         for evaluation_id in list_episode_evaluations(artifacts_dir)
@@ -803,12 +698,6 @@ def render_trajectory(artifacts_dir: Path) -> None:
                 f"{row['total_reward']:.1f}",
                 help="Récompense cumulée de ce vol.",
             )
-
-    st.caption(
-        "Les trois courbes décrivent l'état du module à chaque pas. Un bon "
-        "atterrissage se lit ainsi : l'altitude descend régulièrement vers zéro, "
-        "la vitesse verticale reste faible, et l'angle revient près de zéro."
-    )
 
     fig = go.Figure()
     for column, label, color in [
@@ -871,27 +760,15 @@ def render_optuna(artifacts_dir: Path) -> None:
     complete = trials[trials["state"] == "COMPLETE"].copy()
     pruned = trials[trials["state"] == "PRUNED"]
 
-    st.markdown("### Comment les réglages ont été trouvés")
-    st.caption(
-        "Un algorithme de recherche (TPE) propose des combinaisons de réglages, "
-        "les teste, et se concentre progressivement sur les zones prometteuses. "
-        "Chaque essai est entraîné sur deux seeds différentes et noté par leur "
-        "moyenne : un essai jugé sur un seul entraînement mesurerait surtout la "
-        "chance du tirage initial."
-    )
+    st.markdown("#### Recherche TPE — 120 essais, 2 seeds/essai, MedianPruner")
 
     cols = st.columns(4)
     cols[0].metric("Essais menés à terme", len(complete))
-    cols[1].metric("Essais interrompus", len(pruned),
-                   help="Arrêtés en cours de route car nettement sous la médiane. "
-                        "Cela libère du temps de calcul pour les essais prometteurs.")
+    cols[1].metric("Essais élagués", len(pruned))
     if selected:
-        cols[2].metric("Gamma retenu", f"{selected['parameters']['gamma']:.5f}",
-                       help="Le facteur d'actualisation : à quel point l'agent "
-                            "tient compte des récompenses lointaines.")
-        cols[3].metric("Moyenne sur 5 entraînements", f"{selected['robust_mean_reward']:.1f}",
-                       delta=f"pire des 5 : {selected['robust_min_reward']:.0f}",
-                       help="Le réglage retenu réentraîné 5 fois de zéro.")
+        cols[2].metric("Gamma retenu", f"{selected['parameters']['gamma']:.5f}")
+        cols[3].metric("Robustesse (5 seeds)", f"{selected['robust_mean_reward']:.1f}",
+                       delta=f"min {selected['robust_min_reward']:.0f}")
 
     left, right = st.columns(2)
     with left:
@@ -906,10 +783,7 @@ def render_optuna(artifacts_dir: Path) -> None:
         fig.update_traces(marker=dict(size=9, line=dict(width=1, color="#ffffff")))
         add_target_line(fig)
         st.plotly_chart(style_figure(fig), width="stretch")
-        st.caption(
-            f"{len(pruned)} essais supplémentaires ont été interrompus avant la fin "
-            "et ne figurent pas ici. La couleur indique la valeur de gamma."
-        )
+        st.caption(f"{len(pruned)} essais élagués non représentés · couleur = gamma")
     with right:
         grid = gamma.sort_values("gamma")
         fig = go.Figure(go.Scatter(
@@ -927,10 +801,7 @@ def render_optuna(artifacts_dir: Path) -> None:
         fig.update_layout(title="Réglage fin de gamma",
                           xaxis_title="Gamma", yaxis_title="Récompense moyenne")
         st.plotly_chart(style_figure(fig), width="stretch")
-        st.caption(
-            "Chaque point est entraîné sur trois seeds ; la barre verticale "
-            "montre l'écart entre elles."
-        )
+        st.caption("3 seeds/point · barre = σ inter-seeds")
 
     left, right = st.columns(2)
     with left:
@@ -944,10 +815,7 @@ def render_optuna(artifacts_dir: Path) -> None:
             fig.update_layout(title="Quels réglages comptent vraiment",
                               xaxis_title="Importance estimée", yaxis_title="", height=400)
             st.plotly_chart(thin_bars(style_figure(fig)), width="stretch")
-            st.caption(
-                "Estimation PED-ANOVA : quelle part des écarts de performance "
-                "chaque hyperparamètre explique."
-            )
+            st.caption("PED-ANOVA · part de variance expliquée par paramètre")
     with right:
         if not robust_summary.empty:
             plot = robust_summary.sort_values("mean").copy()
@@ -970,13 +838,9 @@ def render_optuna(artifacts_dir: Path) -> None:
             fig.update_layout(title="Les finalistes réentraînés 5 fois",
                               xaxis_title="Récompense moyenne", yaxis_title="", height=400)
             st.plotly_chart(thin_bars(style_figure(fig), 0.5), width="stretch")
-            st.caption(
-                "Le losange orange est le point décisif : un candidat peut avoir "
-                "une bonne moyenne et s'effondrer sur un entraînement. C'est ce "
-                "qui distingue un réglage fiable d'un réglage chanceux."
-            )
+            st.caption("Losange = pire des 5 seeds · critère de robustesse")
 
-    with st.expander("Tous les essais menés à terme"):
+    with st.expander("Table des essais aboutis"):
         columns = ["number", "value", "user_attrs_score_std", "user_attrs_score_min",
                    "params_gamma", "params_learning_rate", "params_ent_coef",
                    "params_n_steps", "params_batch_size", "params_n_epochs",
@@ -994,16 +858,16 @@ def main() -> None:
 
     registry = load_registry(ARTIFACTS_DIR)
 
-    essentials, phases, comparison, episodes, trajectory, optuna_tab = st.tabs([
-        "L'essentiel",
-        "Étapes de la mission",
-        "Comparer deux modèles",
+    summary, phases, comparison, episodes, trajectory, optuna_tab = st.tabs([
+        "Synthèse",
+        "Apprentissage",
+        "Comparaison",
         "Épisodes",
-        "Un vol en détail",
-        "Recherche des réglages",
+        "Trajectoire",
+        "Optuna",
     ])
-    with essentials:
-        render_essentials(registry, ARTIFACTS_DIR)
+    with summary:
+        render_summary(registry, ARTIFACTS_DIR)
     with phases:
         render_phases(registry, ARTIFACTS_DIR)
     with comparison:

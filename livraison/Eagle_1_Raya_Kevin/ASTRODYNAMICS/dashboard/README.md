@@ -1,14 +1,10 @@
 # Dashboard Eagle-1
 
-Le dashboard Streamlit raconte le passage de la politique aléatoire au pilote
-PPO final. Il lit directement les CSV, JSON et fichiers `EvalCallback` produits
-par le notebook et les runs enregistrés par la GUI.
-
-Il est conçu pour rester lisible par quelqu'un qui découvre le projet : chaque
-onglet répond à une question formulée en français courant, chaque indicateur
-porte une infobulle expliquant ce qu'il mesure, et les identifiants techniques
-des expériences (`ppo_gamma_extended_selection`, `broad_t110`…) sont traduits en
-libellés lisibles.
+Instrument de suivi des expériences de la mission. Il lit directement les CSV,
+JSON et fichiers `EvalCallback` produits par le notebook et les runs de la GUI.
+Les identifiants techniques (`ppo_gamma_extended_selection`, `broad_t110`…) sont
+traduits en libellés lisibles ; le reste reste factuel, sans habillage
+pédagogique — les commentaires de lecture sont laissés à la présentation orale.
 
 ## Lancement
 
@@ -21,14 +17,14 @@ Streamlit prendrait sinon le port 8501, déjà utilisé par la GUI.
 
 ## Les six onglets
 
-| Onglet | Question à laquelle il répond |
+| Onglet | Contenu |
 |---|---|
-| **L'essentiel** | Le pilote fonctionne-t-il ? Le chiffre clé, les indicateurs de fiabilité, et une comparaison avec les points de référence. |
-| **Étapes de la mission** | Comment est-on passé du hasard au pilote final ? Les six étapes dans l'ordre, avec la question posée à chacune. |
-| **Comparer deux modèles** | En quoi ces deux modèles diffèrent-ils ? Chiffres alignés, distributions superposées, courbes d'apprentissage et écarts de réglages. |
-| **Épisodes** | Que se passe-t-il quand ça rate ? Filtres par issue et par plage de récompense, moyenne, écart-type, médiane, min/max. |
-| **Un vol en détail** | Comment se déroule un atterrissage ? Altitude, vitesse, angle, décisions et récompense accumulée. |
-| **Recherche des réglages** | D'où viennent les hyperparamètres ? Essais Optuna, réglage fin de gamma, importance des paramètres, validation multi-seed. |
+| **Synthèse** | Indicateurs finaux (moyenne, σ, médiane, réussite, pire épisode, longueur, carburant) et récompense moyenne par politique. |
+| **Apprentissage** | Meilleur résultat par phase, et courbes `EvalCallback` filtrables par expérience. |
+| **Comparaison** | Deux évaluations alignées : deltas, distributions superposées, apprentissage comparé, table d'hyperparamètres. |
+| **Épisodes** | Filtres par issue et plage de récompense ; moyenne, σ, médiane, min/max recalculés sur la sélection. |
+| **Trajectoire** | Télémétrie pas à pas (altitude, vitesse, angle), distribution des actions, récompense cumulée. |
+| **Optuna** | Essais TPE, raffinement de gamma, importance PED-ANOVA, validation multi-seed. |
 
 ## Choix de lisibilité
 
