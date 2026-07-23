@@ -34,6 +34,9 @@ Le réglage final utilise `gamma=0.99976`, `learning_rate≈1,69e-3`,
 1 500 000 pas avec trois seeds, la meilleure étant choisie sur le jeu de
 sélection — jamais sur les 100 épisodes réservés.
 
+L'organisation technique d'ensemble (flux, modules, contrats de données,
+décisions justifiées) est décrite dans [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
 ## Livrables
 
 | Livrable | Emplacement |
