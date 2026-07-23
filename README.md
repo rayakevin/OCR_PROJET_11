@@ -42,5 +42,5 @@ sélectionne automatiquement un autre port libre et affiche l'URL correspondante
 Tests :
 
 ```bash
-uv run pytest ASTRODYNAMICS/api/tests ASTRODYNAMICS/gui/tests ASTRODYNAMICS/dashboard/tests -q
+uv run pytest ASTRODYNAMICS/api/tests ASTRODYNAMICS/gui/tests ASTRODYNAMICS/dashboard/tests ASTRODYNAMICS/tests -q
 ```

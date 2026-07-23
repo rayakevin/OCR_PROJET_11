@@ -161,6 +161,29 @@ def build_gamma_grid(best_gamma: float, size: int) -> list[float]:
     return sorted({round(g, 6) for g in gammas if 0.9 < g < 0.99999})
 
 
+def dedup_key(parameters: dict) -> str:
+    """Clé d'unicité tolérante aux écarts numériques négligeables.
+
+    La grille arrondit gamma à six décimales alors que la recherche large le
+    garde en pleine précision : sans arrondi commun, deux réglages identiques à
+    5e-7 près sur gamma — soit 0,2 % d'horizon effectif — seraient validés deux
+    fois, et compteraient à tort comme deux finalistes distincts.
+    """
+    rounded = {}
+    for name, value in parameters.items():
+        if name == "gamma":
+            # La grille produit déjà gamma arrondi à six décimales ; appliquer le
+            # même arrondi à un gamma de recherche large fait tomber les deux sur
+            # la même clé lorsqu'ils s'accordent à ce niveau. Les points de grille
+            # distincts diffèrent de plus de 1e-4 et restent donc bien séparés.
+            rounded[name] = round(value, 6)
+        elif isinstance(value, float):
+            rounded[name] = float(f"{value:.6g}")
+        else:
+            rounded[name] = value
+    return json.dumps(rounded, sort_keys=True)
+
+
 def phase_gamma_focus(study: optuna.Study, workers: int) -> pd.DataFrame:
     """Mesure finement gamma autour de l'optimum, sur plusieurs seeds."""
     best = study.best_trial
@@ -225,25 +248,6 @@ def phase_robustness(
             "search_mean_reward": float(row["mean"]),
             "parameters": {**best_parameters, "gamma": float(row["gamma"])},
         }
-
-    def dedup_key(parameters: dict) -> str:
-        """Clé d'unicité tolérante aux écarts numériques négligeables.
-
-        La grille arrondit gamma à six décimales alors que la recherche large le
-        garde en pleine précision : sans arrondi commun, deux réglages
-        identiques à 5e-7 près sur gamma — soit 0,2 % d'horizon effectif —
-        seraient validés deux fois, et compteraient à tort comme deux finalistes.
-        """
-        rounded = {}
-        for name, value in parameters.items():
-            if name == "gamma":
-                # On compare l'horizon effectif, seule échelle où gamma est lisible.
-                rounded[name] = round(1.0 / (1.0 - value), 1)
-            elif isinstance(value, float):
-                rounded[name] = float(f"{value:.6g}")
-            else:
-                rounded[name] = value
-        return json.dumps(rounded, sort_keys=True)
 
     # Deux sources peuvent proposer le même réglage : on ne le valide qu'une fois.
     unique: dict[str, tuple[str, dict]] = {}

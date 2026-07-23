@@ -113,7 +113,7 @@ Dashboard : `http://localhost:8502`.
 ## Tests
 
 ```bash
-uv run pytest ASTRODYNAMICS/api/tests ASTRODYNAMICS/gui/tests ASTRODYNAMICS/dashboard/tests -q
+uv run pytest ASTRODYNAMICS/api/tests ASTRODYNAMICS/gui/tests ASTRODYNAMICS/dashboard/tests ASTRODYNAMICS/tests -q
 ```
 
 Les tests vérifient notamment :
@@ -123,7 +123,10 @@ Les tests vérifient notamment :
 - le flux JSON `état → action` ;
 - une partie complète réussie via HTTP ;
 - la sauvegarde d'un run GUI ;
-- la disponibilité des métriques et trajectoires du dashboard.
+- la disponibilité des métriques et trajectoires du dashboard ;
+- les fonctions pures de la campagne Optuna : reparamétrisation de `gamma`,
+  grille de raffinement, déduplication des finalistes et cloisonnement des
+  seeds (`ASTRODYNAMICS/tests/`).
 
 ## Données et logs
 
