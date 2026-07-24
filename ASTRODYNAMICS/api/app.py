@@ -18,6 +18,8 @@ except ImportError:
 
 import numpy as np
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 from stable_baselines3 import PPO
 
@@ -65,6 +67,7 @@ class StateRequest(BaseModel):
     @field_validator("state")
     @classmethod
     def state_must_be_finite(cls, state: list[float]) -> list[float]:
+        """Rejette un état contenant NaN ou l'infini, que la politique ne peut pas traiter."""
         if not all(math.isfinite(value) for value in state):
             raise ValueError("Toutes les composantes de l'état doivent être finies.")
         return state
@@ -111,6 +114,23 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(
+    _request: Request,
+    error: RequestValidationError,
+) -> JSONResponse:
+    """Renvoie un détail sérialisable, y compris si l'entrée contient NaN."""
+    details = [
+        {
+            "loc": list(item["loc"]),
+            "msg": item["msg"],
+            "type": item["type"],
+        }
+        for item in error.errors()
+    ]
+    return JSONResponse(status_code=422, content={"detail": details})
 
 
 @app.get("/health", response_model=HealthResponse, tags=["service"])

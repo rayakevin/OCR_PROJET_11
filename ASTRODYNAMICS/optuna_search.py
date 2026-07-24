@@ -39,7 +39,7 @@ import argparse
 import json
 import os
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -68,8 +68,9 @@ ENV_ID = "LunarLander-v3"
 MISSION_DIR = Path(__file__).resolve().parent
 ARTIFACTS_DIR = MISSION_DIR / "artifacts"
 STUDY_DIR = ARTIFACTS_DIR / "optuna" / "ppo_lunarlander"
-
 STUDY_NAME = "ppo_lunarlander"
+FAST_STUDY_DIR = ARTIFACTS_DIR / "optuna" / "ppo_lunarlander_fast"
+FAST_STUDY_NAME = "ppo_lunarlander_fast"
 
 # Séparation stricte des seeds : la recherche n'observe jamais les épisodes qui
 # serviront à la sélection (5000+) ni à l'évaluation finale (10000+).
@@ -89,7 +90,6 @@ class SearchConfig:
     eval_interval: int = 25_000
     startup_trials: int = 15
     warmup_steps: int = 50_000
-    extra_search_space: dict = field(default_factory=dict)
 
     @property
     def total_timesteps(self) -> int:
@@ -234,21 +234,25 @@ def make_objective(config: SearchConfig):
     return objective
 
 
-def build_storage() -> optuna.storages.RDBStorage:
+def build_storage(study_dir: Path = STUDY_DIR) -> optuna.storages.RDBStorage:
     """Stockage SQLite partagé, tolérant aux accès concurrents des workers."""
-    STUDY_DIR.mkdir(parents=True, exist_ok=True)
-    db_path = (STUDY_DIR / "study.db").resolve()
+    study_dir.mkdir(parents=True, exist_ok=True)
+    db_path = (study_dir / "study.db").resolve()
     return optuna.storages.RDBStorage(
         url=f"sqlite:///{db_path.as_posix()}",
         engine_kwargs={"connect_args": {"timeout": 120}},
     )
 
 
-def create_or_load_study(config: SearchConfig) -> optuna.Study:
+def create_or_load_study(
+    config: SearchConfig,
+    study_name: str = STUDY_NAME,
+    study_dir: Path = STUDY_DIR,
+) -> optuna.Study:
     """Crée l'étude, ou la recharge si des essais existent déjà."""
     return optuna.create_study(
-        study_name=STUDY_NAME,
-        storage=build_storage(),
+        study_name=study_name,
+        storage=build_storage(study_dir),
         sampler=TPESampler(seed=42, n_startup_trials=config.startup_trials),
         pruner=MedianPruner(
             n_startup_trials=config.startup_trials,
@@ -259,11 +263,14 @@ def create_or_load_study(config: SearchConfig) -> optuna.Study:
     )
 
 
-def run_worker(worker_index: int, n_trials: int, fast: bool) -> None:
+def run_worker(n_trials: int, fast: bool, study_name: str, study_dir: Path) -> None:
     """Point d'entrée d'un processus worker : consomme `n_trials` essais."""
     torch.set_num_threads(1)
     config = FAST_CONFIG if fast else SearchConfig()
-    study = optuna.load_study(study_name=STUDY_NAME, storage=build_storage())
+    study = optuna.load_study(
+        study_name=study_name,
+        storage=build_storage(study_dir),
+    )
     study.optimize(
         make_objective(config),
         n_trials=n_trials,
@@ -271,18 +278,25 @@ def run_worker(worker_index: int, n_trials: int, fast: bool) -> None:
     )
 
 
-def export_results(config: SearchConfig) -> dict:
+def export_results(
+    config: SearchConfig,
+    study_name: str = STUDY_NAME,
+    study_dir: Path = STUDY_DIR,
+) -> dict:
     """Écrit `trials.csv`, l'importance des paramètres et le meilleur essai."""
     import pandas as pd
 
-    study = optuna.load_study(study_name=STUDY_NAME, storage=build_storage())
+    study = optuna.load_study(
+        study_name=study_name,
+        storage=build_storage(study_dir),
+    )
     trials_df = study.trials_dataframe()
-    trials_df.to_csv(STUDY_DIR / "trials.csv", index=False)
+    trials_df.to_csv(study_dir / "trials.csv", index=False)
 
     completed = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
     pruned = [t for t in study.trials if t.state == optuna.trial.TrialState.PRUNED]
 
-    importance_path = STUDY_DIR / "parameter_importance.csv"
+    importance_path = study_dir / "parameter_importance.csv"
     try:
         from optuna.importance import PedAnovaImportanceEvaluator
 
@@ -297,7 +311,7 @@ def export_results(config: SearchConfig) -> dict:
 
     best = study.best_trial
     payload = {
-        "study_name": STUDY_NAME,
+        "study_name": study_name,
         "n_trials": len(study.trials),
         "n_complete": len(completed),
         "n_pruned": len(pruned),
@@ -312,7 +326,7 @@ def export_results(config: SearchConfig) -> dict:
         "best_seed_scores": best.user_attrs.get("seed_scores"),
         "exported_at_utc": datetime.now(timezone.utc).isoformat(),
     }
-    (STUDY_DIR / "best_trial_search.json").write_text(
+    (study_dir / "best_trial_search.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     return payload
@@ -328,6 +342,7 @@ def resolved_parameters(params: dict) -> dict:
 
 
 def main() -> int:
+    """Répartit les essais restants sur des workers parallèles, puis exporte les résultats."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--trials", type=int, default=120, help="Nombre total d'essais visés.")
     parser.add_argument("--workers", type=int, default=16, help="Processus parallèles.")
@@ -336,12 +351,14 @@ def main() -> int:
     args = parser.parse_args()
 
     config = FAST_CONFIG if args.fast else SearchConfig(n_trials=args.trials)
-    study = create_or_load_study(config)
+    study_name = FAST_STUDY_NAME if args.fast else STUDY_NAME
+    study_dir = FAST_STUDY_DIR if args.fast else STUDY_DIR
+    study = create_or_load_study(config, study_name, study_dir)
     done = len([t for t in study.trials if t.state != optuna.trial.TrialState.RUNNING])
     target = config.n_trials if args.fast else args.trials
     remaining = max(0, target - done)
 
-    print(f"Étude          : {STUDY_NAME}")
+    print(f"Étude          : {study_name}")
     print(f"Essais présents: {done} / {target}")
 
     if not args.export_only and remaining:
@@ -355,8 +372,11 @@ def main() -> int:
 
         context = mp.get_context("spawn")
         processes = [
-            context.Process(target=run_worker, args=(i, count, args.fast))
-            for i, count in enumerate(per_worker)
+            context.Process(
+                target=run_worker,
+                args=(count, args.fast, study_name, study_dir),
+            )
+            for count in per_worker
             if count
         ]
         started = time.perf_counter()
@@ -364,9 +384,12 @@ def main() -> int:
             process.start()
         for process in processes:
             process.join()
+        failed_workers = [process.exitcode for process in processes if process.exitcode]
+        if failed_workers:
+            raise RuntimeError(f"Échec de worker(s) Optuna : codes {failed_workers}")
         print(f"Recherche terminée en {(time.perf_counter() - started) / 60:.1f} min")
 
-    payload = export_results(config)
+    payload = export_results(config, study_name, study_dir)
     print(json.dumps(payload, ensure_ascii=False, indent=2)[:1200])
     return 0
 

@@ -60,6 +60,7 @@ SELECTION_EPISODES = 50
 FINAL_SEED_START = 10_000
 FINAL_EPISODES = 100
 FINAL_STEPS = 1_500_000
+CHECKPOINT_EVAL_SEED_BASE = 30_000
 
 CANDIDATE_PREFIX = "ppo_optuna_s"
 WINNER_ID = "ppo_optuna"
@@ -81,6 +82,8 @@ def train_final(payload: dict) -> dict:
 
     train_env = make_vec_env(ENV_ID, n_envs=1, seed=seed, monitor_dir=str(monitor_dir))
     eval_env = Monitor(gym.make(ENV_ID))
+    checkpoint_eval_seed = CHECKPOINT_EVAL_SEED_BASE + seed
+    eval_env.reset(seed=checkpoint_eval_seed)
     callback = EvalCallback(
         eval_env,
         best_model_save_path=str(model_dir),
@@ -128,6 +131,7 @@ def train_final(payload: dict) -> dict:
         "training_duration_s": duration,
         "hyperparameters": parameters,
         "best_model_path": str(path_to_load),
+        "checkpoint_eval_seed": checkpoint_eval_seed,
         "selection_mean_reward": selection_score,
         "selection_seed_start": SELECTION_SEED_START,
         "selection_episodes": SELECTION_EPISODES,
@@ -142,6 +146,7 @@ def train_final(payload: dict) -> dict:
 
 
 def main() -> int:
+    """Réentraîne le réglage retenu sur plusieurs seeds neuves, puis sacre le meilleur sur le jeu de sélection."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--workers", type=int, default=3)
     parser.add_argument("--steps", type=int, default=FINAL_STEPS)

@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation technique — Eagle-1</title>
+  <style>
+    :root {
+      --ink: #1d2a33;
+      --muted: #5a6872;
+      --paper: #ffffff;
+      --background: #edf1f3;
+      --navy: #12384a;
+      --blue: #176780;
+      --orange: #c26a2e;
+      --line: #cbd5da;
+      --soft: #f4f7f8;
+      --code: #e8eef1;
+      --good: #276749;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--background);
+      font: 16px/1.55 Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 28px));
+      margin: 28px auto;
+      padding: 42px 54px 64px;
+      background: var(--paper);
+      box-shadow: 0 12px 36px rgba(22, 49, 62, .13);
+    }
+
+    h1, h2, h3, h4 {
+      color: var(--navy);
+      line-height: 1.2;
+      margin: 1.35em 0 .55em;
+    }
+    h1 { font-size: 2.55rem; letter-spacing: -.035em; margin-top: 0; }
+    h2 { font-size: 1.7rem; padding-bottom: .25em; border-bottom: 2px solid var(--blue); }
+    h3 { font-size: 1.2rem; }
+    h4 { font-size: 1rem; }
+    p { margin: .45em 0 .9em; }
+    a { color: var(--blue); text-underline-offset: 2px; }
+    code {
+      padding: .08em .3em;
+      border-radius: 3px;
+      background: var(--code);
+      font: .9em "SFMono-Regular", Consolas, monospace;
+    }
+    pre {
+      overflow: auto;
+      padding: 14px 16px;
+      color: #eef8fa;
+      background: #172c37;
+      border-radius: 6px;
+      font: .83rem/1.5 "SFMono-Regular", Consolas, monospace;
+    }
+
+    table {
+      width: 100%;
+      margin: .8em 0 1.2em;
+      border-collapse: collapse;
+      font-size: .91rem;
+    }
+    th, td {
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: var(--navy); background: #eaf0f2; }
+    tr:nth-child(even) td { background: #fafcfc; }
+
+    .cover {
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-top: 7px solid var(--orange);
+    }
+    .eyebrow {
+      color: var(--blue);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .subtitle { max-width: 760px; color: var(--muted); font-size: 1.16rem; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .badge {
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--navy);
+      background: var(--soft);
+      font-size: .82rem;
+      font-weight: 700;
+    }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px 22px;
+      padding: 0;
+      list-style: none;
+    }
+    .toc a {
+      display: block;
+      padding: 7px 0;
+      border-bottom: 1px dotted var(--line);
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 12px;
+      margin: .8em 0 1.1em;
+    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      padding: 13px 15px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fbfcfd;
+    }
+    .card h3, .card h4 { margin-top: 0; }
+    .card p:last-child { margin-bottom: 0; }
+
+    .callout {
+      margin: 1em 0;
+      padding: 11px 14px;
+      border-left: 5px solid var(--blue);
+      background: #e8f2f4;
+    }
+    .callout.good { border-color: var(--good); background: #edf7f1; }
+    .callout.warn { border-color: var(--orange); background: #fff4e9; }
+
+    .architecture {
+      width: 100%;
+      height: auto;
+      margin: 12px 0 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+    }
+    .architecture .box { fill: #fff; stroke: #176780; stroke-width: 2; rx: 9; }
+    .architecture .data { fill: #fff5e9; stroke: #c26a2e; }
+    .architecture .title { fill: #12384a; font-size: 17px; font-weight: 700; text-anchor: middle; }
+    .architecture .small { fill: #5a6872; font-size: 12px; text-anchor: middle; }
+    .architecture .arrow { stroke: #617782; stroke-width: 2; marker-end: url(#arrow); }
+
+    .flow {
+      display: flex;
+      align-items: stretch;
+      gap: 7px;
+      margin: 1em 0;
+    }
+    .flow div {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--soft);
+      text-align: center;
+    }
+    .flow .arrow-text {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border: 0;
+      background: transparent;
+      color: var(--orange);
+      font-weight: 800;
+    }
+
+    .module {
+      margin: 1.2em 0;
+      padding: 2px 18px 14px;
+      border-left: 4px solid var(--blue);
+      background: #fafcfc;
+    }
+    .module h3 { margin-top: .8em; }
+    .muted { color: var(--muted); }
+    .status { color: var(--good); font-weight: 750; }
+    .print {
+      position: fixed;
+      top: 15px;
+      right: 18px;
+      z-index: 10;
+      padding: 9px 14px;
+      border: 0;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--blue);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .16);
+      cursor: pointer;
+    }
+
+    @media (max-width: 760px) {
+      .page { width: 100%; margin: 0; padding: 28px 20px 48px; box-shadow: none; }
+      .grid-2, .grid-3, .toc { grid-template-columns: 1fr; }
+      .flow { flex-direction: column; }
+      .flow .arrow-text { transform: rotate(90deg); }
+      .print { display: none; }
+      h1 { font-size: 2rem; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .page { width: 100%; margin: 0; padding: 12mm; box-shadow: none; }
+      .print { display: none; }
+      h2, h3 { break-after: avoid; }
+      table, .card, .module, .callout, svg { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <button class="print" onclick="window.print()">Imprimer / PDF</button>
+  <main class="page">
+    <header class="cover">
+      <div class="eyebrow">AstroDynamics · Projet étudiant</div>
+      <h1>Eagle-1<br>Documentation technique</h1>
+      <p class="subtitle">
+        Architecture, fonctionnement général et description détaillée du notebook,
+        de la chaîne d'entraînement, de l'API, de la GUI, du dashboard et des
+        données enregistrées.
+      </p>
+      <div class="badges">
+        <span class="badge">Python 3.12</span>
+        <span class="badge">Gymnasium</span>
+        <span class="badge">Stable-Baselines3</span>
+        <span class="badge">FastAPI</span>
+        <span class="badge">Streamlit</span>
+        <span class="badge">Optuna</span>
+      </div>
+    </header>
+
+    <section id="sommaire">
+      <h2>Sommaire</h2>
+      <ol class="toc">
+        <li><a href="#objectif">1. Objectif et périmètre</a></li>
+        <li><a href="#architecture">2. Architecture générale</a></li>
+        <li><a href="#notebook">3. Notebook et démarche scientifique</a></li>
+        <li><a href="#optimisation">4. Modules d'optimisation</a></li>
+        <li><a href="#api">5. API FastAPI</a></li>
+        <li><a href="#gui">6. GUI Streamlit</a></li>
+        <li><a href="#dashboard">7. Dashboard Streamlit</a></li>
+        <li><a href="#data">8. Données et artefacts</a></li>
+        <li><a href="#outils">9. Lanceur, tests et validation</a></li>
+        <li><a href="#scenario">10. Scénario complet de bout en bout</a></li>
+        <li><a href="#limites">11. Limites et pistes d'amélioration</a></li>
+      </ol>
+    </section>
+
+    <section id="objectif">
+      <h2>1. Objectif et périmètre</h2>
+      <p>
+        Le projet entraîne un agent à poser un module lunaire dans
+        <code>LunarLander-v3</code>. Le résultat attendu n'est pas uniquement un
+        modèle : il faut aussi expliquer la démarche, conserver les expériences,
+        exposer la décision par une API et proposer deux interfaces locales.
+      </p>
+
+      <div class="grid-3">
+        <div class="card">
+          <h3>Résultat final</h3>
+          <p><strong>268,98 ± 37,46</strong> sur 100 épisodes réservés, avec
+          <strong>96 %</strong> de réussites.</p>
+        </div>
+        <div class="card">
+          <h3>Modèle retenu</h3>
+          <p>PPO, après une baseline DQN, une analyse de sensibilité et une
+          recherche Optuna.</p>
+        </div>
+        <div class="card">
+          <h3>Applications</h3>
+          <p>Une API FastAPI, une GUI Streamlit et un dashboard Streamlit,
+          exécutés localement.</p>
+        </div>
+      </div>
+
+      
+    <section id="architecture">
+      <h2>2. Architecture générale</h2>
+      <svg class="architecture" viewBox="0 0 1000 430" role="img"
+           aria-label="Architecture générale du projet Eagle-1">
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3"
+                  orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#617782"/>
+          </marker>
+        </defs>
+        <rect class="box" x="55" y="55" width="220" height="105"/>
+        <text class="title" x="165" y="91">Notebook</text>
+        <text class="small" x="165" y="117">exploration · entraînement</text>
+        <text class="small" x="165" y="137">évaluation · vidéo</text>
+
+        <rect class="box" x="55" y="260" width="220" height="105"/>
+        <text class="title" x="165" y="296">Modules Optuna</text>
+        <text class="small" x="165" y="322">recherche · sélection</text>
+        <text class="small" x="165" y="342">entraînement final</text>
+
+        <rect class="box data" x="380" y="145" width="240" height="135"/>
+        <text class="title" x="500" y="181">artifacts/</text>
+        <text class="small" x="500" y="208">modèles · CSV · JSON</text>
+        <text class="small" x="500" y="230">TensorBoard · Optuna</text>
+        <text class="small" x="500" y="252">figures · vidéo</text>
+
+        <rect class="box" x="725" y="45" width="220" height="90"/>
+        <text class="title" x="835" y="82">API FastAPI</text>
+        <text class="small" x="835" y="106">état → action</text>
+
+        <rect class="box" x="725" y="170" width="220" height="90"/>
+        <text class="title" x="835" y="207">GUI Streamlit</text>
+        <text class="small" x="835" y="231">simulation via l'API</text>
+
+        <rect class="box" x="725" y="295" width="220" height="90"/>
+        <text class="title" x="835" y="332">Dashboard</text>
+        <text class="small" x="835" y="356">lecture des résultats</text>
+
+        <line class="arrow" x1="275" y1="108" x2="380" y2="180"/>
+        <line class="arrow" x1="275" y1="312" x2="380" y2="245"/>
+        <line class="arrow" x1="620" y1="180" x2="725" y2="100"/>
+        <line class="arrow" x1="620" y1="245" x2="725" y2="335"/>
+        <line class="arrow" x1="835" y1="135" x2="835" y2="170"/>
+      </svg>
+
+      <p>Deux flux coexistent :</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Flux hors ligne</h3>
+          <p>
+            Le notebook et les scripts Optuna entraînent puis écrivent dans
+            <code>artifacts/</code>. Ces opérations sont longues mais ne sont
+            exécutées qu'au moment des expériences.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Flux interactif</h3>
+          <p>
+            L'API charge le modèle sauvegardé. La GUI lui envoie un état à chaque
+            pas. Le dashboard lit directement les fichiers de résultats.
+          </p>
+        </div>
+      </div>
+
+      <table>
+        <thead><tr><th>Composant</th><th>Responsabilité</th><th>Dépendance principale</th></tr></thead>
+        <tbody>
+          <tr><td><code>NB.ipynb</code></td><td>Démontrer la démarche scientifique</td><td>Gymnasium, SB3, pandas, Matplotlib</td></tr>
+          <tr><td><code>optuna_*.py</code></td><td>Rejouer la recherche et la sélection</td><td>Optuna, PPO</td></tr>
+          <tr><td><code>api/app.py</code></td><td>Servir une action validée</td><td>FastAPI, Pydantic, PPO</td></tr>
+          <tr><td><code>gui/app.py</code></td><td>Jouer et afficher un épisode</td><td>Streamlit, Gymnasium, httpx</td></tr>
+          <tr><td><code>dashboard/app.py</code></td><td>Analyser les résultats</td><td>Streamlit, pandas, NumPy</td></tr>
+          <tr><td><code>launch_demo.py</code></td><td>Démarrer les trois services</td><td>subprocess, urllib</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="notebook">
+      <h2>3. Notebook et démarche scientifique</h2>
+      <p>
+        <code>NB.ipynb</code> est le document principal de la mission. Il contient
+        les explications, le code exécuté et les sorties obtenues. Les scripts
+        Optuna complètent le notebook pour éviter d'y placer plusieurs centaines
+        de lignes de gestion de processus.
+      </p>
+
+      <h3>Déroulé général</h3>
+      <ol>
+        <li>Importer les bibliothèques et fixer les seeds.</li>
+        <li>Explorer les huit observations et les quatre actions.</li>
+        <li>Établir une politique aléatoire puis une baseline DQN.</li>
+        <li>Tester PPO et quelques variations d'un paramètre à la fois.</li>
+        <li>Lire les résultats de la campagne Optuna.</li>
+        <li>Comparer les candidats sur des seeds communes.</li>
+        <li>Évaluer une seule fois le modèle final sur 100 épisodes réservés.</li>
+        <li>Produire les tables, figures et la vidéo de démonstration.</li>
+      </ol>
+
+      <h3>Fonctions importantes du notebook</h3>
+      <table>
+        <thead><tr><th>Fonction</th><th>Rôle</th><th>Sorties</th></tr></thead>
+        <tbody>
+          <tr><td><code>train_experiment()</code></td><td>Créer ou reprendre un entraînement SB3 avec un <code>EvalCallback</code></td><td>Modèles, monitor, TensorBoard, configuration JSON</td></tr>
+          <tr><td><code>continue_ppo_experiment()</code></td><td>Prolonger un checkpoint PPO prometteur</td><td>Nouveau modèle et courbe d'apprentissage</td></tr>
+          <tr><td><code>policy_diagnostics()</code></td><td>Extraire les Q-valeurs DQN ou probabilités/valeur PPO</td><td>Colonnes facultatives des logs détaillés</td></tr>
+          <tr><td><code>evaluate_agent()</code></td><td>Jouer des épisodes à seeds fixes et calculer les métriques</td><td><code>episodes.csv</code>, <code>steps.csv</code>, <code>summary.json</code></td></tr>
+          <tr><td><code>show_reward_distribution()</code></td><td>Tracer une distribution simple et le seuil de 200</td><td>Figure Matplotlib</td></tr>
+          <tr><td><code>_upsert_registry()</code></td><td>Mettre à jour le registre sans créer de doublon</td><td><code>experiment_registry.csv</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout good">
+        La séparation des seeds est le point méthodologique central : les épisodes
+        utilisés pour choisir un modèle ne sont pas ceux qui servent à publier la
+        performance finale.
+      </div>
+    </section>
+
+    <section id="optimisation">
+      <h2>4. Modules d'optimisation</h2>
+
+      <div class="module">
+        <h3><code>optuna_search.py</code> — recherche large</h3>
+        <p>
+          Ce module construit une étude TPE persistée dans SQLite. Chaque essai
+          propose dix hyperparamètres PPO. <code>gamma</code> est échantillonné en
+          travaillant sur <code>1 - gamma</code>, avec une échelle logarithmique.
+        </p>
+        <ul>
+          <li><code>SearchConfig</code> rassemble tous les budgets.</li>
+          <li><code>sample_ppo_parameters()</code> décrit l'espace de recherche.</li>
+          <li><code>train_and_score_seed()</code> entraîne une seed par tranches.</li>
+          <li><code>make_objective()</code> calcule la moyenne des deux seeds.</li>
+          <li><code>MedianPruner</code> arrête les essais peu prometteurs.</li>
+          <li><code>export_results()</code> produit les CSV et le résumé JSON.</li>
+        </ul>
+        <p>
+          Le mode <code>--fast</code> possède sa propre base et son propre nom
+          d'étude. Il peut donc vérifier le code sans contaminer les 120 essais
+          officiels.
+        </p>
+      </div>
+
+      <div class="module">
+        <h3><code>optuna_select.py</code> — raffinement et robustesse</h3>
+        <p>
+          La recherche large donne une bonne zone mais reste bruitée. Ce module
+          construit une petite grille autour du meilleur <code>gamma</code>, puis
+          réentraîne plusieurs finalistes avec cinq seeds nouvelles.
+        </p>
+        <ul>
+          <li><code>build_gamma_grid()</code> crée neuf valeurs autour de l'optimum.</li>
+          <li><code>dedup_key()</code> évite de valider deux fois le même réglage.</li>
+          <li><code>phase_gamma_focus()</code> résume les trois entraînements par point.</li>
+          <li><code>phase_robustness()</code> classe les finalistes par moyenne, écart-type et minimum.</li>
+          <li><code>run_jobs()</code> parallélise les entraînements indépendants.</li>
+        </ul>
+      </div>
+
+      <div class="module">
+        <h3><code>optuna_final.py</code> — modèle livré</h3>
+        <p>
+          Le réglage gagnant est réentraîné trois fois, à 1,5 million de pas.
+          Chaque entraînement conserve son meilleur checkpoint. Les checkpoints
+          utilisent une plage de seeds dédiée et reproductible ; le gagnant est
+          ensuite choisi sur le jeu de sélection.
+        </p>
+        <ul>
+          <li><code>train_final()</code> entraîne, sauvegarde et évalue un candidat.</li>
+          <li><code>main()</code> lance les trois seeds et copie le gagnant sous
+          <code>models/ppo_optuna/</code>.</li>
+          <li>Le jeu final <code>10000+</code> n'est pas consulté pendant ce choix.</li>
+        </ul>
+      </div>
+
+      <pre>uv run python ASTRODYNAMICS/optuna_search.py --fast
+uv run python ASTRODYNAMICS/optuna_search.py --trials 120 --workers 16
+uv run python ASTRODYNAMICS/optuna_select.py --workers 16
+uv run python ASTRODYNAMICS/optuna_final.py --workers 3</pre>
+    </section>
+
+    <section id="api">
+      <h2>5. API FastAPI</h2>
+      <p>
+        L'API isole le modèle du reste de l'application. Un client envoie les huit
+        valeurs d'un état et reçoit l'action discrète choisie par PPO.
+      </p>
+
+      <div class="flow">
+        <div>JSON<br><code>state[8]</code></div>
+        <div class="arrow-text">→</div>
+        <div>Pydantic<br>longueur et valeurs finies</div>
+        <div class="arrow-text">→</div>
+        <div>NumPy<br><code>float32</code></div>
+        <div class="arrow-text">→</div>
+        <div>PPO<br><code>predict()</code></div>
+        <div class="arrow-text">→</div>
+        <div>Action<br>0 à 3</div>
+      </div>
+
+      <h3>Détail de <code>api/app.py</code></h3>
+      <table>
+        <thead><tr><th>Élément</th><th>Fonctionnement</th></tr></thead>
+        <tbody>
+          <tr><td><code>StateRequest</code></td><td>Schéma d'entrée : exactement huit nombres finis et un booléen <code>deterministic</code>.</td></tr>
+          <tr><td><code>validation_error_handler()</code></td><td>Produit une réponse <code>422</code> sérialisable, même si l'entrée contient <code>NaN</code> ou une valeur infinie.</td></tr>
+          <tr><td><code>ActionResponse</code></td><td>Action, libellé lisible et identifiant du modèle.</td></tr>
+          <tr><td><code>HealthResponse</code></td><td>État du service, présence du modèle et environnement ciblé.</td></tr>
+          <tr><td><code>get_model_path()</code></td><td>Utilise le modèle livré ou la variable <code>EAGLE1_MODEL_PATH</code>.</td></tr>
+          <tr><td><code>lifespan()</code></td><td>Charge PPO une seule fois au démarrage et libère la référence à l'arrêt.</td></tr>
+          <tr><td><code>predict_action()</code></td><td>Convertit l'état, appelle le modèle et formate la réponse.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Routes</h3>
+      <table>
+        <thead><tr><th>Méthode</th><th>Route</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>GET</td><td><code>/health</code></td><td>Contrôler que le modèle est chargé.</td></tr>
+          <tr><td>POST</td><td><code>/predict</code></td><td>Route principale état → action.</td></tr>
+          <tr><td>POST</td><td><code>/play</code></td><td>Alias explicite utilisé par la GUI.</td></tr>
+          <tr><td>GET</td><td><code>/docs</code></td><td>Documentation OpenAPI générée par FastAPI.</td></tr>
+        </tbody>
+      </table>
+      <pre>uv run uvicorn ASTRODYNAMICS.api.app:app</pre>
+    </section>
+
+    <section id="gui">
+      <h2>6. GUI Streamlit</h2>
+      <p>
+        La GUI possède l'environnement Gymnasium, mais pas le modèle. Cette
+        séparation prouve que la politique est réellement consommée par HTTP.
+      </p>
+
+      <h3>Les deux phases d'un vol</h3>
+      <ol>
+        <li>
+          <strong>Calcul :</strong> <code>play_episode()</code> crée
+          <code>LunarLander-v3</code>, envoie l'observation à <code>/play</code>,
+          applique l'action et stocke la télémétrie.
+        </li>
+        <li>
+          <strong>Affichage :</strong> <code>replay_episode()</code> recrée la même
+          seed et rejoue les actions. Il choisit un nombre d'images adapté à la
+          durée demandée, sans changer le résultat du vol.
+        </li>
+      </ol>
+
+      <h3>Détail de <code>gui/app.py</code></h3>
+      <table>
+        <thead><tr><th>Élément</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr><td><code>EpisodeResult</code></td><td>Regroupe seed, score, pas, issue, succès et proxy carburant.</td></tr>
+          <tr><td><code>_endpoint()</code></td><td>Adapte la route aux tests locaux ou au client HTTP réel.</td></tr>
+          <tr><td><code>check_api()</code></td><td>Interroge <code>/health</code> avant un vol.</td></tr>
+          <tr><td><code>play_episode()</code></td><td>Exécute toute la boucle état → API → action → environnement.</td></tr>
+          <tr><td><code>replay_episode()</code></td><td>Produit les images RGB avec une cadence contrôlée.</td></tr>
+          <tr><td><code>save_run()</code></td><td>Écrit <code>summary.json</code>, <code>steps.csv</code> et met à jour <code>runs.csv</code>.</td></tr>
+          <tr><td><code>main()</code></td><td>Assemble la barre latérale, les métriques, l'image et les graphiques.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        Le « carburant » est un proxy : 0,30 pour le moteur principal et 0,03
+        pour un moteur latéral. Il sert à comparer les vols, pas à représenter des
+        kilogrammes réels.
+      </div>
+    </section>
+
+    <section id="dashboard">
+      <h2>7. Dashboard Streamlit</h2>
+      <p>
+        Le dashboard est volontairement compact. Quatre onglets racontent la
+        progression du projet sans dupliquer le notebook ni créer un outil de
+        business intelligence disproportionné.
+      </p>
+
+      <div class="grid-2">
+        <div class="card"><h3>1. Synthèse</h3><p>Score final, dispersion, taux de réussite et comparaison avec les références.</p></div>
+        <div class="card"><h3>2. Apprentissage</h3><p>Meilleur résultat par phase et courbes <code>EvalCallback</code> filtrables.</p></div>
+        <div class="card"><h3>3. Épisodes</h3><p>Récompense, moyenne glissante, issues, carburant et actions utilisées.</p></div>
+        <div class="card"><h3>4. Optuna</h3><p>Essais aboutis/élagués, grille gamma, importance et robustesse.</p></div>
+      </div>
+
+      <h3>Détail de <code>dashboard/app.py</code></h3>
+      <table>
+        <thead><tr><th>Famille</th><th>Fonctions</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr><td>Libellés</td><td><code>experiment_of()</code>, <code>human_label()</code>, <code>experiment_phase()</code></td><td>Transformer les identifiants techniques en texte lisible.</td></tr>
+          <tr><td>Chargement</td><td><code>load_registry()</code>, <code>load_episodes()</code>, <code>load_learning_curves()</code></td><td>Lire les CSV et fichiers NumPy.</td></tr>
+          <tr><td>Calcul</td><td><code>build_reward_history()</code></td><td>Construire la série par épisode et la moyenne glissante sur dix épisodes.</td></tr>
+          <tr><td>Optuna</td><td><code>load_optuna_results()</code>, <code>load_selected_config()</code></td><td>Lire les résultats de recherche sans ouvrir SQLite.</td></tr>
+          <tr><td>Rendu</td><td><code>render_summary()</code>, <code>render_phases()</code>, <code>render_episodes()</code>, <code>render_optuna()</code></td><td>Construire les quatre onglets.</td></tr>
+        </tbody>
+      </table>
+
+      <p>
+        Les composants graphiques natifs de Streamlit sont suffisants : courbes,
+        barres, nuages de points, métriques, tableaux et filtres. Ce choix réduit
+        le volume de code et facilite la maintenance.
+      </p>
+    </section>
+
+    <section id="data">
+      <h2>8. Données et artefacts</h2>
+      <p>
+        <code>artifacts/</code> est la mémoire du projet. Les applications ne
+        dépendent pas de l'état du notebook : elles relisent des fichiers stables.
+      </p>
+
+      <pre>artifacts/
+├── configs/                 configurations JSON des entraînements
+├── evaluations/
+│   └── &lt;evaluation_id&gt;/
+│       ├── summary.json     résumé agrégé
+│       ├── episodes.csv     une ligne par épisode
+│       ├── steps.csv        une ligne par pas pour les évaluations détaillées
+│       └── during_training/evaluations.npz
+├── models/                  modèles SB3 sauvegardés
+├── monitor/                 récompenses d'entraînement
+├── tensorboard/             événements TensorBoard
+├── optuna/                  bases SQLite et exports CSV
+├── figures/                 graphiques exportés
+├── video/                   démonstration MP4
+├── gui_runs/                vols lancés depuis la GUI
+├── demo_logs/               sorties des trois services
+└── experiment_registry.csv  index des évaluations</pre>
+
+      <h3>Niveau expérience</h3>
+      <p>
+        <code>experiment_registry.csv</code> contient une ligne par évaluation :
+        identifiant, algorithme, nombre d'épisodes, récompense moyenne,
+        écart-type, taux de réussite, longueur et carburant moyens.
+      </p>
+
+      <h3>Niveau épisode</h3>
+      <p>
+        <code>episodes.csv</code> contient la seed, la récompense totale, le nombre
+        de pas, l'issue, l'état final, le nombre d'utilisations de chaque action et
+        le proxy de carburant. C'est la source principale de l'onglet « Épisodes ».
+      </p>
+
+      <h3>Niveau pas de temps</h3>
+      <p>
+        <code>steps.csv</code> conserve l'état avant et après l'action, la
+        récompense immédiate, le cumul, les indicateurs de fin et, pour PPO, les
+        probabilités des actions ainsi que la valeur d'état. Ce niveau est utile
+        pour diagnostiquer un vol, mais le dashboard courant n'a pas besoin de
+        charger ces fichiers volumineux.
+      </p>
+
+      <h3>Pourquoi plusieurs formats ?</h3>
+      <table>
+        <thead><tr><th>Format</th><th>Usage</th><th>Justification</th></tr></thead>
+        <tbody>
+          <tr><td>CSV</td><td>Registres, épisodes, essais Optuna</td><td>Lisible par pandas, un tableur et le dashboard</td></tr>
+          <tr><td>JSON</td><td>Configurations et résumés</td><td>Adapté aux objets structurés et au contrat API</td></tr>
+          <tr><td>NPZ</td><td>Courbes <code>EvalCallback</code></td><td>Format natif compact utilisé par SB3</td></tr>
+          <tr><td>SQLite</td><td>Études Optuna</td><td>Persistance et reprise de la recherche</td></tr>
+          <tr><td>ZIP SB3</td><td>Modèles</td><td>Sauvegarde native rechargeable par PPO/DQN</td></tr>
+          <tr><td>TensorBoard</td><td>Métriques d'entraînement</td><td>Suivi temporel détaillé</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="outils">
+      <h2>9. Lanceur, tests et validation</h2>
+
+      <h3><code>launch_demo.py</code></h3>
+      <p>
+        Le lanceur évite de demander trois commandes à l'utilisateur. Il choisit
+        des ports libres, crée un dossier de logs, démarre Uvicorn puis les deux
+        applications Streamlit, contrôle leurs routes de santé et ouvre le
+        navigateur.
+      </p>
+      <pre>uv run python launch_demo.py
+uv run python launch_demo.py --no-browser</pre>
+
+      <h3>Tests</h3>
+      <table>
+        <thead><tr><th>Dossier</th><th>Ce qui est vérifié</th></tr></thead>
+        <tbody>
+          <tr><td><code>api/tests/</code></td><td>Santé, validation, nombres non finis, rechargement du modèle et épisode HTTP complet.</td></tr>
+          <tr><td><code>gui/tests/</code></td><td>Épisode, rejeu, sauvegarde des fichiers et rendu initial Streamlit.</td></tr>
+          <tr><td><code>dashboard/tests/</code></td><td>Schémas, moyenne glissante, données Optuna et rendu des quatre onglets.</td></tr>
+          <tr><td><code>tests/</code></td><td>Fonctions pures Optuna, séparation des seeds et isolement du mode rapide.</td></tr>
+        </tbody>
+      </table>
+      <pre>uv run pytest ASTRODYNAMICS/api/tests ASTRODYNAMICS/gui/tests \
+  ASTRODYNAMICS/dashboard/tests ASTRODYNAMICS/tests -q
+uv run python ASTRODYNAMICS/validate_mission.py</pre>
+
+      <p>
+        <code>validate_mission.py</code> complète pytest avec des contrôles sur le
+        livrable : notebook exécuté, modèle présent, score final, données Optuna,
+        vidéo et métriques attendues dans les interfaces.
+      </p>
+    </section>
+
+    <section id="scenario">
+      <h2>10. Scénario complet de bout en bout</h2>
+      <ol>
+        <li>Le notebook entraîne les modèles et écrit les artefacts.</li>
+        <li><code>optuna_final.py</code> copie le gagnant vers
+        <code>models/ppo_optuna/best_model.zip</code>.</li>
+        <li>Au démarrage, l'API charge ce fichier une seule fois.</li>
+        <li>La GUI crée un environnement avec une seed choisie.</li>
+        <li>Elle convertit l'observation NumPy en liste JSON.</li>
+        <li>L'API valide les huit nombres, les reconvertit en <code>float32</code>
+        et appelle <code>PPO.predict()</code>.</li>
+        <li>La GUI applique l'action reçue puis recommence jusqu'à la fin.</li>
+        <li>Le vol est rejoué à l'écran et sauvegardé dans <code>gui_runs/</code>.</li>
+        <li>Le dashboard reste indépendant : il présente les évaluations hors
+        ligne conservées dans <code>artifacts/</code>.</li>
+      </ol>
+
+      <div class="callout good">
+        Ce flux est également parcouru par le test d'intégration de l'API sur la
+        seed 10000 : chaque décision passe par HTTP et l'épisode doit dépasser
+        200 points.
+      </div>
+    </section>
+
+    <section id="limites">
+      <h2>11. Limites et pistes d'amélioration</h2>
+      <ul>
+        <li>Le simulateur simplifie fortement la physique d'un véritable alunissage.</li>
+        <li>Le proxy carburant est dérivé des coûts d'action, pas d'un réservoir physique.</li>
+        <li>L'évaluation sur 100 épisodes donne une estimation, pas une garantie absolue.</li>
+        <li>L'API est locale : elle n'a ni authentification, ni quota, ni supervision.</li>
+        <li>Le dashboard charge les fichiers à chaque exécution et ne vise pas de gros volumes.</li>
+        <li>La campagne Optuna reste coûteuse malgré l'élagage et le parallélisme.</li>
+      </ul>
+
+      <h3>Améliorations raisonnables</h3>
+      <ul>
+        <li>Ajouter une normalisation des observations et comparer son effet.</li>
+        <li>Tester d'autres architectures de réseau sur le même protocole de seeds.</li>
+        <li>Mesurer la latence de l'API et ajouter un petit test de charge.</li>
+        <li>Exporter un rapport automatique à partir du registre des expériences.</li>
+        <li>Conteneuriser la démonstration si un déploiement devient nécessaire.</li>
+      </ul>
+
+      <p class="muted">
+        Documentation générée pour accompagner le sous-projet AstroDynamics
+        Eagle-1. Elle est autonome et peut être imprimée en PDF depuis le bouton
+        placé en haut de page.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

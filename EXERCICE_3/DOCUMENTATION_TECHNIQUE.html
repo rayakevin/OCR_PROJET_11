@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation technique — Exercice 3</title>
+  <style>
+    :root {
+      --ink: #17242d;
+      --navy: #12384a;
+      --blue: #176780;
+      --orange: #c26a2e;
+      --line: #cbd5da;
+      --paper: #ffffff;
+      --surface: #f4f6f7;
+      --soft-blue: #eaf3f6;
+      --soft-orange: #f9eee6;
+      --green: #26735b;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--surface); font: 15px/1.58 Inter, "Segoe UI", Arial, sans-serif; }
+    main { width: min(1080px, calc(100% - 32px)); margin: 28px auto; padding: 52px 64px; background: var(--paper); box-shadow: 0 8px 30px rgba(18, 56, 74, .09); }
+    h1, h2, h3 { color: var(--navy); line-height: 1.2; }
+    h1 { margin: 6px 0 12px; font-size: clamp(2rem, 5vw, 3.2rem); }
+    h2 { margin: 46px 0 18px; padding-bottom: 8px; border-bottom: 2px solid var(--blue); font-size: 1.55rem; }
+    h3 { margin: 24px 0 8px; font-size: 1.08rem; }
+    p { margin: 8px 0 14px; }
+    a { color: var(--blue); }
+    code { padding: .08rem .3rem; border-radius: 3px; background: #edf1f3; font-family: "SFMono-Regular", Consolas, monospace; font-size: .9em; }
+    .kicker { color: var(--blue); font-size: .76rem; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; }
+    .lead { max-width: 780px; color: #4c606b; font-size: 1.08rem; }
+    .topline { height: 5px; margin: -52px -64px 42px; background: var(--orange); }
+    .actions { float: right; }
+    button { padding: 8px 13px; color: var(--navy); background: white; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; }
+    .tags, .nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+    .tag, .nav a { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--navy); background: white; font-size: .84rem; text-decoration: none; }
+    .tag.accent { border-color: #e7b592; background: var(--soft-orange); }
+    .toc { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px 28px; margin: 28px 0; padding: 22px; background: var(--surface); border-left: 4px solid var(--blue); }
+    .toc a { text-decoration: none; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 18px 0; }
+    .card, .callout { padding: 16px 18px; border: 1px solid var(--line); border-radius: 5px; background: white; }
+    .card strong { display: block; color: var(--navy); font-size: 1.2rem; }
+    .callout { margin: 18px 0; border-left: 4px solid var(--green); background: #edf7f3; }
+    .warning { border-left-color: var(--orange); background: var(--soft-orange); }
+    .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: stretch; margin: 22px 0; }
+    .flow div { position: relative; padding: 14px 10px; text-align: center; color: var(--navy); background: var(--soft-blue); border: 1px solid #b9d2dc; border-radius: 5px; }
+    .flow div:not(:last-child)::after { content: "→"; position: absolute; right: -16px; top: 31%; z-index: 2; color: var(--orange); font-weight: 800; }
+    table { width: 100%; margin: 14px 0 22px; border-collapse: collapse; }
+    th, td { padding: 10px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--navy); background: #e9eef0; }
+    tbody tr:nth-child(even) { background: #fafbfb; }
+    .tree { padding: 18px 20px; overflow-x: auto; color: #e9f5f8; background: #142f3c; border-radius: 5px; font: 13px/1.5 "SFMono-Regular", Consolas, monospace; }
+    footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: #667780; font-size: .85rem; }
+    @media (max-width: 760px) {
+      main { width: 100%; margin: 0; padding: 34px 22px; }
+      .topline { margin: -34px -22px 28px; }
+      .actions { float: none; margin-bottom: 14px; }
+      .toc, .cards { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .flow div:not(:last-child)::after { content: "↓"; right: 49%; top: auto; bottom: -18px; }
+    }
+    @media print {
+      body { background: white; font-size: 11pt; }
+      main { width: 100%; margin: 0; padding: 18mm; box-shadow: none; }
+      .actions, .nav { display: none; }
+      h2 { break-after: avoid; }
+      table, .card, .callout { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="topline"></div>
+  <div class="actions"><button onclick="window.print()">Imprimer / PDF</button></div>
+  <div class="kicker">Projet 11 · Parcours Reinforcement Learning</div>
+  <h1>Exercice 3<br>Deep Q-Network</h1>
+  <p class="lead">
+    Architecture, fonctionnement et lecture détaillée du notebook qui remplace
+    la Q-table par un réseau PyTorch, puis compare cette implémentation à
+    Stable-Baselines3.
+  </p>
+  <div class="tags">
+    <span class="tag accent">CartPole-v1</span>
+    <span class="tag">PyTorch</span>
+    <span class="tag">DQN</span>
+    <span class="tag">11 cellules de code</span>
+    <span class="tag">2 modèles + TensorBoard</span>
+  </div>
+  <nav class="nav" aria-label="Navigation entre exercices">
+    <a href="../EXERCICE_1/DOCUMENTATION_TECHNIQUE.html">Exercice 1</a>
+    <a href="../EXERCICE_2/DOCUMENTATION_TECHNIQUE.html">Exercice 2</a>
+    <a href="../EXERCICE_3/DOCUMENTATION_TECHNIQUE.html">Exercice 3</a>
+    <a href="../DOCUMENTATION_EXERCICES.html">Vue d'ensemble</a>
+  </nav>
+
+  <div class="toc">
+    <a href="#perimetre">1. Objectif et périmètre</a>
+    <a href="#architecture">2. Architecture et flux</a>
+    <a href="#notebook">3. Déroulé du notebook</a>
+    <a href="#elements">4. Classes et fonctions importantes</a>
+    <a href="#artefacts">5. Données et artefacts</a>
+    <a href="#resultats">6. Résultats et reproductibilité</a>
+    <a href="#limites">7. Limites et prolongement</a>
+  </div>
+
+  <section id="perimetre">
+    <h2>1. Objectif et périmètre</h2>
+    <p>
+      La Q-table de l'exercice 2 fonctionne parce que FrozenLake possède
+      16 états. CartPole reçoit quatre nombres réels : le nombre d'états
+      possibles devient pratiquement infini. Un réseau apprend donc à approximer
+      les valeurs Q.
+    </p>
+    <div class="cards">
+      <div class="card"><strong>17 410</strong>paramètres dans le réseau manuel</div>
+      <div class="card"><strong>10 000</strong>transitions dans le replay buffer</div>
+      <div class="card"><strong>500</strong>pas entre deux synchronisations cibles</div>
+    </div>
+    <div class="callout">
+      <strong>Périmètre étudiant crédible.</strong> Environ 10 à 14 heures :
+      réseau PyTorch, mémoire, cible de Bellman, entraînement, comparaison SB3,
+      TensorBoard, sauvegarde et rédaction. Les entraînements s'exécutent en
+      arrière-plan et ne représentent pas du temps de développement actif.
+    </div>
+  </section>
+
+  <section id="architecture">
+    <h2>2. Architecture et flux</h2>
+    <div class="flow" aria-label="Flux d'une transition DQN">
+      <div>Observer<br>l'état</div>
+      <div>Choisir<br>epsilon-greedy</div>
+      <div>Stocker<br>la transition</div>
+      <div>Échantillonner<br>un lot</div>
+      <div>Optimiser<br>et synchroniser</div>
+    </div>
+    <div class="cards">
+      <div class="card"><strong>Policy network</strong>Produit deux valeurs Q et reçoit les gradients.</div>
+      <div class="card"><strong>Replay buffer</strong>Décorrèle les transitions et réutilise l'expérience.</div>
+      <div class="card"><strong>Target network</strong>Fournit une cible temporairement stable.</div>
+    </div>
+    <p>
+      Le notebook comporte deux chemins : une implémentation manuelle destinée à
+      expliquer les mécanismes, puis une implémentation SB3 destinée à comparer
+      une version industrialisée sur le même environnement.
+    </p>
+  </section>
+
+  <section id="notebook">
+    <h2>3. Déroulé du notebook</h2>
+    <table>
+      <thead><tr><th>Partie</th><th>Responsabilité</th><th>Sortie</th></tr></thead>
+      <tbody>
+        <tr><td>1. Réseau</td><td>Définir un MLP 4 → 128 → 128 → 2 et vérifier ses dimensions.</td><td>Architecture PyTorch</td></tr>
+        <tr><td>2. Mémoire</td><td>Implémenter un buffer circulaire et l'échantillonnage aléatoire.</td><td>Lots de transitions</td></tr>
+        <tr><td>3. Action</td><td>Faire décroître epsilon et alterner exploration et exploitation.</td><td>Action discrète</td></tr>
+        <tr><td>4. Optimisation</td><td>Calculer Q prédit, cible de Bellman, perte de Huber et gradients.</td><td>Réseau mis à jour</td></tr>
+        <tr><td>5. Entraînement manuel</td><td>Jouer 1 000 épisodes et synchroniser la cible tous les 500 pas.</td><td>Courbe et poids PT</td></tr>
+        <tr><td>6. Comparaison SB3</td><td>Entraîner la configuration par défaut et la configuration réglée.</td><td>Scores et modèle ZIP</td></tr>
+        <tr><td>7. Restitution</td><td>Comparer les trois politiques sur les mêmes 100 seeds.</td><td>Graphique final</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="elements">
+    <h2>4. Classes et fonctions importantes</h2>
+    <table>
+      <thead><tr><th>Élément</th><th>Fonctionnement</th></tr></thead>
+      <tbody>
+        <tr><td><code>DQN(nn.Module)</code></td><td>Trois couches linéaires ; ReLU sur les couches cachées, valeurs Q brutes en sortie.</td></tr>
+        <tr><td><code>ReplayBuffer</code></td><td><code>push()</code> ajoute une transition, <code>sample()</code> retourne un lot non corrélé.</td></tr>
+        <tr><td><code>select_action()</code></td><td>Explore selon epsilon ou choisit <code>argmax(policy_net(state))</code>.</td></tr>
+        <tr><td><code>optimize_model()</code></td><td>Utilise <code>gather</code>, le réseau cible, la perte de Huber et le clipping des gradients.</td></tr>
+        <tr><td><code>evaluer_reseau()</code></td><td>Évalue le réseau manuel sans exploration sur 100 seeds réservées.</td></tr>
+        <tr><td><code>evaluer_sb3()</code></td><td>Applique exactement le même protocole aux deux modèles SB3.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warning">
+      Les résultats de la courbe d'entraînement et ceux de l'évaluation ne
+      répondent pas à la même question. La courbe contient encore de
+      l'exploration ; le tableau final mesure des politiques déterministes sur
+      une plage de seeds commune.
+    </div>
+  </section>
+
+  <section id="artefacts">
+    <h2>5. Données et artefacts</h2>
+    <div class="tree">EXERCICE_3/
+├── NB_EXO_3.ipynb
+├── README.md
+├── DOCUMENTATION_TECHNIQUE.html
+├── dqn_manuel_cartpole.pt
+├── dqn_cartpole.zip
+└── logs/
+    ├── DQN_defaut_1/
+    └── DQN_regle_1/</div>
+    <table>
+      <thead><tr><th>Format</th><th>Contenu</th><th>Chargement</th></tr></thead>
+      <tbody>
+        <tr><td><code>.pt</code></td><td><code>state_dict</code> du réseau PyTorch manuel.</td><td>Recréer <code>DQN</code>, puis <code>load_state_dict()</code>.</td></tr>
+        <tr><td><code>.zip</code></td><td>Modèle SB3 réglé, réseau et paramètres inclus.</td><td><code>SB3_DQN.load("dqn_cartpole.zip")</code>.</td></tr>
+        <tr><td>TensorBoard</td><td>Récompenses, pertes, exploration et métriques temporelles.</td><td><code>tensorboard --logdir logs</code>.</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Les dossiers historiques <code>DQN_1</code> à <code>DQN_7</code>
+      témoignent des exécutions antérieures. Les deux dossiers nommés
+      <code>DQN_defaut_1</code> et <code>DQN_regle_1</code> correspondent au
+      protocole final documenté.
+    </p>
+  </section>
+
+  <section id="resultats">
+    <h2>6. Résultats et reproductibilité</h2>
+    <table>
+      <thead><tr><th>Politique</th><th>Moyenne</th><th>Écart-type</th><th>Artefact</th></tr></thead>
+      <tbody>
+        <tr><td>DQN manuel</td><td>293,9</td><td>95,8</td><td><code>dqn_manuel_cartpole.pt</code></td></tr>
+        <tr><td>SB3 par défaut</td><td>199,9</td><td>54,0</td><td>non conservé</td></tr>
+        <tr><td>SB3 réglé</td><td>500,0</td><td>0,0</td><td><code>dqn_cartpole.zip</code></td></tr>
+      </tbody>
+    </table>
+    <p>
+      Python, NumPy et PyTorch utilisent la seed 0. Les trois politiques sont
+      évaluées sur les seeds 10 000 à 10 099, sans exploration. Le modèle ZIP a
+      été rechargé séparément pour vérifier qu'il reproduit le score annoncé.
+    </p>
+    <pre class="tree">uv run jupyter nbconvert --to notebook --execute --inplace NB_EXO_3.ipynb \
+  --ExecutePreprocessor.timeout=1800</pre>
+  </section>
+
+  <section id="limites">
+    <h2>7. Limites et prolongement</h2>
+    <ul>
+      <li>une seule seed d'entraînement ne quantifie pas la variance d'apprentissage ;</li>
+      <li>le réseau manuel privilégie l'explication plutôt que les performances ;</li>
+      <li>les hyperparamètres réglés sont spécifiques à CartPole ;</li>
+      <li>une suite logique serait une comparaison multi-seed et la séparation du code en modules testables.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Documentation autonome générée pour harmoniser les exercices 1, 2 et 3 ·
+    Sources de vérité : notebook exécuté et artefacts du dossier.
+  </footer>
+</main>
+</body>
+</html>

@@ -1,10 +1,8 @@
 # Dashboard Eagle-1
 
-Instrument de suivi des expériences de la mission. Il lit directement les CSV,
-JSON et fichiers `EvalCallback` produits par le notebook et les runs de la GUI.
-Les identifiants techniques (`ppo_gamma_extended_selection`, `broad_t110`…) sont
-traduits en libellés lisibles ; le reste reste factuel, sans habillage
-pédagogique — les commentaires de lecture sont laissés à la présentation orale.
+Le dashboard Streamlit lit les fichiers produits pendant les entraînements et
+les évaluations. Il ne lance aucun modèle : son rôle est uniquement d'expliquer
+les résultats déjà enregistrés dans `ASTRODYNAMICS/artifacts/`.
 
 ## Lancement
 
@@ -12,41 +10,31 @@ pédagogique — les commentaires de lecture sont laissés à la présentation o
 uv run streamlit run ASTRODYNAMICS/dashboard/app.py --server.port 8502
 ```
 
-Dashboard : `http://localhost:8502`. Le port est précisé explicitement car
-Streamlit prendrait sinon le port 8501, déjà utilisé par la GUI.
+Dashboard : `http://localhost:8502`.
 
-## Les six onglets
+## Les quatre onglets
 
-| Onglet | Contenu |
+| Onglet | Question traitée |
 |---|---|
-| **Synthèse** | Indicateurs finaux (moyenne, σ, médiane, réussite, pire épisode, longueur, carburant) et récompense moyenne par politique. |
-| **Apprentissage** | Meilleur résultat par phase, et courbes `EvalCallback` filtrables par expérience. |
-| **Comparaison** | Deux évaluations alignées : deltas, distributions superposées, apprentissage comparé, table d'hyperparamètres. |
-| **Épisodes** | Filtres par issue et plage de récompense ; moyenne, σ, médiane, min/max recalculés sur la sélection. |
-| **Trajectoire** | Télémétrie pas à pas (altitude, vitesse, angle), distribution des actions, récompense cumulée. |
-| **Optuna** | Essais TPE, raffinement de gamma, importance PED-ANOVA, validation multi-seed. |
+| **Synthèse** | Le pilote atteint-il l'objectif de 200 points et fait-il mieux que les baselines ? |
+| **Apprentissage** | Comment les performances ont-elles évolué entre les phases et pendant les entraînements ? |
+| **Épisodes** | Quels vols réussissent ou échouent, avec quelle récompense, quelle consommation et quelles actions ? |
+| **Optuna** | Quels essais ont été menés et quels hyperparamètres ont compté dans le choix final ? |
 
-## Choix de lisibilité
+La partie « Épisodes » fournit les interactions principales : choix de
+l'évaluation, filtre par issue et plage de récompense. Elle affiche aussi la
+récompense par épisode, une moyenne glissante sur dix épisodes, le proxy de
+carburant et la distribution des quatre actions.
 
-**Emphase plutôt qu'arc-en-ciel.** Sur les vues de comparaison, une seule série
-porte l'information et le reste passe en gris. Un graphique où chaque barre a sa
-couleur oblige à faire des allers-retours avec la légende.
+## Sources de données
 
-**Palette validée, pas choisie à l'œil.** Les couleurs passent les contrôles de
-`validate_palette.js` : bande de luminosité, seuil de chroma, séparation en
-vision daltonienne et contraste sur le fond. Conséquence concrète : le couple
-vert/rouge habituel pour réussite/échec a été **écarté des graphiques**, car sa
-séparation en deutéranopie ne vaut que ΔE 4,1 — deux séries indistinguables pour
-une partie des lecteurs. Le couple bleu/orange retenu mesure 24,7. Le vert et le
-rouge ne servent plus que dans les textes, toujours avec une icône.
+- `experiment_registry.csv` pour la vue d'ensemble ;
+- `evaluations/*/episodes.csv` pour les résultats par épisode ;
+- `evaluations/*/during_training/evaluations.npz` pour les courbes ;
+- `optuna/ppo_lunarlander/*.csv` pour la recherche et la robustesse.
 
-**Le seuil de 200 est partout.** Chaque graphique de récompense porte la même
-ligne pointillée, pour que la question « est-ce au-dessus de l'objectif ? » se
-lise sans calcul.
-
-**Pas de chiffre sur chaque barre.** Quand une barre porte déjà sa moustache
-d'écart-type, y ajouter une étiquette crée une collision. L'axe situe, le survol
-donne la valeur exacte.
+Le choix de composants graphiques natifs Streamlit garde le code compact et
+suffit au besoin d'une application locale.
 
 ## Tests
 
@@ -54,6 +42,5 @@ donne la valeur exacte.
 uv run pytest ASTRODYNAMICS/dashboard/tests -q
 ```
 
-Les tests vérifient que les sources de données attendues existent et ont le bon
-schéma. Le rendu lui-même est contrôlé avec le harnais `streamlit.testing`, qui
-exécute l'application et remonte toute exception.
+Les tests contrôlent les schémas de données, le calcul de la moyenne glissante
+et le chargement complet de l'application avec `streamlit.testing`.

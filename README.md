@@ -1,6 +1,12 @@
 # Projet 11 — Pilote automatique Eagle-1
 
 Le livrable de mission se trouve dans [`ASTRODYNAMICS/`](ASTRODYNAMICS/README.md).
+La présentation complète de l'architecture et des modules est disponible dans
+[`ASTRODYNAMICS/DOCUMENTATION_TECHNIQUE.html`](ASTRODYNAMICS/DOCUMENTATION_TECHNIQUE.html).
+
+Les trois exercices préparatoires ont été harmonisés selon la même logique.
+Leur progression et leurs documentations sont regroupées dans
+[`DOCUMENTATION_EXERCICES.html`](DOCUMENTATION_EXERCICES.html).
 
 Résultat final sur `LunarLander-v3` : **268,98 ± 37,46** sur 100 épisodes,
 avec **96 % d'atterrissages réussis** et aucun épisode sous 78. Le modèle PPO

@@ -1,12 +1,16 @@
 """Vérifie que les données attendues par le dashboard sont disponibles."""
 
+from pathlib import Path
+
+from streamlit.testing.v1 import AppTest
+
 from ASTRODYNAMICS.dashboard.app import (
     FINAL_EVALUATION_ID,
+    build_reward_history,
     load_episodes,
     load_learning_curves,
     load_optuna_results,
     load_registry,
-    load_steps,
 )
 
 
@@ -19,14 +23,22 @@ def test_dashboard_loads_final_metrics():
     assert final["success_rate"] >= 0.90
 
 
-def test_dashboard_loads_episode_and_step_data():
+def test_dashboard_loads_episode_data():
     episodes = load_episodes(FINAL_EVALUATION_ID)
-    steps = load_steps(FINAL_EVALUATION_ID)
 
     assert len(episodes) == 100
     assert episodes["episode_id"].nunique() == 100
-    assert len(steps) > 10_000
-    assert {"action", "reward", "next_state_1", "next_state_4"} <= set(steps.columns)
+    assert {"action_0_count", "action_1_count", "action_2_count", "action_3_count"} <= set(
+        episodes.columns
+    )
+
+
+def test_reward_history_contains_a_rolling_mean():
+    history = build_reward_history(load_episodes(FINAL_EVALUATION_ID))
+
+    assert list(history.columns) == ["Récompense", "Moyenne glissante"]
+    assert history["Moyenne glissante"].notna().all()
+    assert history.iloc[0]["Moyenne glissante"] == history.iloc[0]["Récompense"]
 
 
 def test_dashboard_loads_learning_curves():
@@ -50,6 +62,18 @@ def test_dashboard_loads_optuna_results():
 
     assert len(results["gamma"]) >= 5
     assert {"gamma", "mean", "std"} <= set(results["gamma"].columns)
-    assert results["robustness"]["train_seed"].nunique() >= 3
     assert {"mean", "std", "min"} <= set(results["robustness_summary"].columns)
     assert set(results["importance"]["parameter"]) >= {"learning_rate", "ent_coef"}
+
+
+def test_dashboard_renders_without_exception():
+    app_path = Path(__file__).resolve().parents[1] / "app.py"
+    rendered = AppTest.from_file(str(app_path)).run(timeout=30)
+
+    assert not rendered.exception
+    assert [tab.label for tab in rendered.tabs] == [
+        "Synthèse",
+        "Apprentissage",
+        "Épisodes",
+        "Optuna",
+    ]

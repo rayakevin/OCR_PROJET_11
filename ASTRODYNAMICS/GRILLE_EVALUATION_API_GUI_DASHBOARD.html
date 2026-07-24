@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Réponse point par point à la grille d'évaluation API, GUI et tableau de bord du projet étudiant Eagle-1.">
+  <title>Eagle-1 — Dossier de preuves API, GUI et tableau de bord</title>
+  <style>
+    :root {
+      --ink: #172036;
+      --muted: #5f6b7d;
+      --paper: #ffffff;
+      --page: #eef3f7;
+      --line: #d8e1e8;
+      --navy: #102a43;
+      --blue: #1d5d85;
+      --cyan: #dff3f6;
+      --green: #176b4d;
+      --green-soft: #e5f5ee;
+      --amber: #9a5a08;
+      --amber-soft: #fff4d8;
+      --red: #a33a3a;
+      --code: #101b2a;
+      --shadow: 0 14px 36px rgba(22, 41, 59, .10);
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 1.5rem;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 2%, rgba(50, 137, 160, .15), transparent 25rem),
+        var(--page);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.62;
+    }
+
+    a { color: var(--blue); }
+    a:hover { color: var(--navy); }
+
+    code, pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    code {
+      padding: .1rem .35rem;
+      border-radius: .3rem;
+      background: #edf2f6;
+      font-size: .92em;
+    }
+
+    pre {
+      margin: 0;
+      padding: 1rem 1.1rem;
+      overflow-x: auto;
+      border-radius: .75rem;
+      color: #edf7ff;
+      background: var(--code);
+      font-size: .83rem;
+      line-height: 1.55;
+    }
+
+    .hero {
+      color: white;
+      background:
+        linear-gradient(125deg, rgba(10, 34, 53, .96), rgba(18, 75, 99, .92)),
+        var(--navy);
+      border-bottom: 5px solid #65c4cd;
+    }
+
+    .hero-inner,
+    main,
+    .footer-inner {
+      width: min(1120px, calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    .hero-inner { padding: 4rem 0 3.2rem; }
+
+    .eyebrow {
+      margin: 0 0 .65rem;
+      color: #9ee4e5;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(2.15rem, 5vw, 4rem);
+      line-height: 1.08;
+      letter-spacing: -.04em;
+    }
+
+    .hero .lead {
+      max-width: 820px;
+      margin: 1.15rem 0 0;
+      color: #d8ebf1;
+      font-size: clamp(1rem, 2vw, 1.22rem);
+    }
+
+    .hero-meta,
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .65rem;
+      margin-top: 1.5rem;
+    }
+
+    .pill,
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      border-radius: 999px;
+      padding: .33rem .7rem;
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .pill {
+      color: #e8f8f9;
+      border: 1px solid rgba(219, 249, 250, .28);
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .status::before {
+      width: .52rem;
+      height: .52rem;
+      border-radius: 50%;
+      background: currentColor;
+      content: "";
+    }
+
+    .status.proved { color: var(--green); background: var(--green-soft); }
+    .status.tested { color: var(--blue); background: var(--cyan); }
+    .status.oral { color: var(--amber); background: var(--amber-soft); }
+
+    main { padding: 2rem 0 4rem; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .toolbar p { margin: 0; color: var(--muted); font-size: .88rem; }
+
+    button {
+      border: 0;
+      border-radius: .65rem;
+      padding: .7rem 1rem;
+      color: white;
+      background: var(--navy);
+      font: inherit;
+      font-size: .84rem;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .panel,
+    section {
+      margin-bottom: 1.35rem;
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .panel { padding: 1.4rem; }
+    section { padding: clamp(1.25rem, 3vw, 2rem); }
+
+    h2 {
+      margin: 0 0 .7rem;
+      color: var(--navy);
+      font-size: clamp(1.55rem, 3vw, 2.15rem);
+      line-height: 1.18;
+      letter-spacing: -.025em;
+    }
+
+    h3 {
+      margin: 1.7rem 0 .55rem;
+      color: var(--navy);
+      font-size: 1.18rem;
+      line-height: 1.3;
+    }
+
+    h4 {
+      margin: 0 0 .35rem;
+      color: var(--navy);
+      font-size: 1rem;
+    }
+
+    p { margin: .5rem 0 .9rem; }
+    ul, ol { padding-left: 1.25rem; }
+    li + li { margin-top: .3rem; }
+
+    .muted { color: var(--muted); }
+    .small { font-size: .86rem; }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .65rem;
+      margin-top: 1rem;
+    }
+
+    .toc a {
+      display: block;
+      padding: .8rem .9rem;
+      border: 1px solid var(--line);
+      border-radius: .7rem;
+      color: var(--navy);
+      background: #f8fafc;
+      font-weight: 750;
+      text-decoration: none;
+    }
+
+    .toc a:hover { border-color: #76a9bd; background: #f0f8fa; }
+
+    .matrix,
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+
+    th, td {
+      padding: .72rem .75rem;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--navy);
+      background: #f2f6f8;
+      font-size: .78rem;
+      letter-spacing: .025em;
+      text-transform: uppercase;
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+
+    .criterion {
+      margin: 1rem 0;
+      padding: 1rem 1rem 1rem 1.1rem;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--green);
+      border-radius: .75rem;
+      background: #fbfdfc;
+    }
+
+    .criterion-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .criterion h3,
+    .criterion h4 { margin-top: 0; }
+
+    .criterion p:last-child { margin-bottom: 0; }
+
+    .evidence {
+      margin-top: .75rem;
+      padding-top: .7rem;
+      border-top: 1px dashed #c9d6dd;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .evidence strong { color: var(--ink); }
+
+    .grid-2,
+    .grid-3,
+    .metrics {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .grid-2 > *,
+    .grid-3 > *,
+    .flow > *,
+    .sequence > * { min-width: 0; }
+
+    .card,
+    .metric {
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: .8rem;
+      background: #f9fbfc;
+    }
+
+    .card p:last-child { margin-bottom: 0; }
+
+    .metric strong {
+      display: block;
+      color: var(--navy);
+      font-size: 1.45rem;
+      line-height: 1.1;
+    }
+
+    .metric span { color: var(--muted); font-size: .77rem; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: .65rem;
+      margin: 1rem 0;
+    }
+
+    .flow-box {
+      min-height: 7.2rem;
+      padding: .9rem;
+      border: 1px solid #bdd2dc;
+      border-radius: .8rem;
+      background: #f5fafb;
+    }
+
+    .flow-box strong {
+      display: block;
+      color: var(--navy);
+      margin-bottom: .3rem;
+    }
+
+    .arrow { color: var(--blue); font-size: 1.5rem; font-weight: 900; }
+
+    .return-flow {
+      margin: -.15rem 0 1rem;
+      padding: .7rem 1rem;
+      border: 1px dashed #8eb4c2;
+      border-radius: .7rem;
+      color: var(--blue);
+      background: #eef8fa;
+      text-align: center;
+      font-size: .88rem;
+      font-weight: 700;
+    }
+
+    .oral-box {
+      margin-top: 1.2rem;
+      padding: 1rem 1.1rem;
+      border-left: 5px solid #e0a137;
+      border-radius: .75rem;
+      color: #51330b;
+      background: var(--amber-soft);
+    }
+
+    .oral-box strong {
+      display: block;
+      margin-bottom: .3rem;
+      color: #704306;
+    }
+
+    .callout {
+      margin: 1rem 0;
+      padding: .9rem 1rem;
+      border: 1px solid #a7d7d8;
+      border-radius: .75rem;
+      background: #eefafa;
+    }
+
+    .test-summary {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1rem 0;
+      padding: 1rem;
+      border: 1px solid #a8d8c4;
+      border-radius: .8rem;
+      background: var(--green-soft);
+    }
+
+    .test-summary .number {
+      color: var(--green);
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .sequence {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .8rem;
+      margin-top: 1rem;
+      counter-reset: story;
+    }
+
+    .sequence .card { position: relative; padding-top: 2.7rem; }
+    .sequence .card::before {
+      position: absolute;
+      top: .8rem;
+      left: .9rem;
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      color: white;
+      background: var(--blue);
+      content: counter(story);
+      counter-increment: story;
+      font-size: .75rem;
+      font-weight: 900;
+      line-height: 1.4rem;
+      text-align: center;
+    }
+
+    .checklist {
+      list-style: none;
+      padding: 0;
+    }
+
+    .checklist li {
+      position: relative;
+      padding: .55rem .5rem .55rem 2rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .checklist li:last-child { border-bottom: 0; }
+    .checklist li::before {
+      position: absolute;
+      left: .35rem;
+      color: var(--green);
+      content: "✓";
+      font-weight: 900;
+    }
+
+    footer {
+      padding: 2rem 0 3rem;
+      color: #d9e6ec;
+      background: var(--navy);
+    }
+
+    footer p { margin: .35rem 0; }
+    footer a { color: #9ee4e5; }
+
+    @media (max-width: 820px) {
+      .toc,
+      .grid-2,
+      .grid-3,
+      .metrics,
+      .sequence { grid-template-columns: 1fr; }
+
+      .flow { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); text-align: center; }
+      .criterion-head { display: block; }
+      .criterion-head .status { margin: .4rem 0; }
+    }
+
+    @media print {
+      body { background: white; font-size: 10.5pt; }
+      .hero { background: var(--navy) !important; print-color-adjust: exact; }
+      .hero-inner { padding: 2rem 0; }
+      main { width: 100%; padding: 1rem 0; }
+      section, .panel { box-shadow: none; break-inside: avoid; }
+      .toolbar, button { display: none; }
+      a { color: inherit; text-decoration: none; }
+      .oral-box, .criterion, .card, .metric { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Mission AstroDynamics · Eagle-1</p>
+      <h1>Dossier de preuves — API, GUI et tableau de bord</h1>
+      <p class="lead">
+        Réponse point par point à la grille d’évaluation. Ce document relie chaque
+        attente au code, aux tests et aux artefacts réellement présents dans le
+        sous-projet.
+      </p>
+      <div class="hero-meta">
+        <span class="pill">Environnement : LunarLander-v3</span>
+        <span class="pill">Agent : PPO optimisé</span>
+        <span class="pill">API : FastAPI</span>
+        <span class="pill">Interfaces : Streamlit</span>
+        <span class="pill">Évaluation finale : 100 épisodes</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <p>Document autonome, consultable dans un navigateur et imprimable en PDF.</p>
+      <button type="button" onclick="window.print()">Imprimer / exporter en PDF</button>
+    </div>
+
+    <div class="panel" role="region" aria-labelledby="lecture-title">
+      <h2 id="lecture-title">Mode de lecture</h2>
+      <p>
+        Les statuts distinguent ce qui est directement visible dans les sources,
+        ce qui a été exécuté automatiquement et ce qui doit être expliqué pendant
+        la soutenance.
+      </p>
+      <div class="legend">
+        <span class="status proved">Démontré dans le projet</span>
+        <span class="status tested">Testé automatiquement</span>
+        <span class="status oral">Argumentaire oral fourni</span>
+      </div>
+      <nav class="toc" aria-label="Sommaire">
+        <a href="#synthese">0. Synthèse de conformité</a>
+        <a href="#flux-api">1. Flux de données et choix de l’API</a>
+        <a href="#formatage">2. Formatage des données</a>
+        <a href="#exposition">3. Exposition des résultats</a>
+        <a href="#dashboard">4. Tableau de bord interactif</a>
+        <a href="#oral">5. Trame de présentation orale</a>
+        <a href="#preuves">6. Index des preuves</a>
+      </nav>
+    </div>
+
+    <section id="synthese">
+      <p class="eyebrow" style="color: var(--blue)">Vue d’ensemble</p>
+      <h2>0. Synthèse de conformité</h2>
+      <p class="muted">
+        Tous les livrables demandés sont présents. Les exigences fonctionnelles
+        sont couvertes par le code, des données d’évaluation et une vidéo de
+        réussite ; les justifications destinées à l’oral sont formulées dans les
+        sections suivantes.
+      </p>
+
+      <div class="matrix">
+        <table>
+          <thead>
+            <tr>
+              <th>Exigence</th>
+              <th>Réponse apportée</th>
+              <th>Preuve principale</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Flux RL état → action</td>
+              <td>Contrat JSON à huit valeurs, réponse avec action discrète 0–3.</td>
+              <td><a href="api/app.py"><code>api/app.py</code></a></td>
+              <td><span class="status tested">Conforme</span></td>
+            </tr>
+            <tr>
+              <td>API structurée et documentée</td>
+              <td>Schémas Pydantic, cycle de vie du modèle, routes typées et docstrings.</td>
+              <td><a href="api/app.py"><code>api/app.py</code></a></td>
+              <td><span class="status proved">Conforme</span></td>
+            </tr>
+            <tr>
+              <td>Interaction testée avec l’environnement</td>
+              <td>Épisode complet réussi en appelant l’API à chaque pas.</td>
+              <td><a href="api/tests/test_api.py"><code>test_api.py</code></a></td>
+              <td><span class="status tested">Conforme</span></td>
+            </tr>
+            <tr>
+              <td>Formatage états, actions, récompenses</td>
+              <td>Section dédiée et exemple exécutable dans le notebook.</td>
+              <td><a href="NB.ipynb"><code>NB.ipynb</code>, §14</a></td>
+              <td><span class="status proved">Conforme</span></td>
+            </tr>
+            <tr>
+              <td>GUI montrant une partie</td>
+              <td>Simulation par API, rendu des images et télémétrie en direct.</td>
+              <td><a href="gui/app.py"><code>gui/app.py</code></a></td>
+              <td><span class="status tested">Conforme</span></td>
+            </tr>
+            <tr>
+              <td>Métriques pertinentes</td>
+              <td>Récompenses, moyenne, écart-type, issues, durée et carburant.</td>
+              <td><a href="dashboard/app.py"><code>dashboard/app.py</code></a></td>
+              <td><span class="status tested">Conforme</span></td>
+            </tr>
+            <tr>
+              <td>Vidéo d’un atterrissage réussi</td>
+              <td>Épisode de récompense 313,57 terminé par un bonus de victoire de 100.</td>
+              <td><a href="artifacts/video/eagle1-success-episode-0.mp4">Vidéo MP4</a></td>
+              <td><span class="status proved">Conforme</span></td>
+            </tr>
+            <tr>
+              <td>Dashboard interactif et storytelling</td>
+              <td>Quatre onglets, sélections, filtres et progression narrative.</td>
+              <td><a href="dashboard/app.py"><code>dashboard/app.py</code></a></td>
+              <td><span class="status oral">Conforme + oral</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="test-summary">
+        <div class="number">19/19</div>
+        <div>
+          <strong>tests API, GUI et dashboard réussis</strong><br>
+          <span class="small">11 tests API, 2 tests GUI et 6 tests dashboard.</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="flux-api">
+      <p class="eyebrow" style="color: var(--blue)">Compétence 1</p>
+      <h2>1. Définir les flux de données afin de sélectionner une API adaptée aux échanges</h2>
+      <p><strong>Livrable demandé :</strong> API <code>.py</code></p>
+
+      <h3>Flux retenu</h3>
+      <div class="flow" role="img" aria-label="Flux état, requête HTTP, action et transition de l'environnement">
+        <div class="flow-box">
+          <strong>1. Environnement / GUI</strong>
+          Observation LunarLander de huit nombres, convertie en liste JSON.
+        </div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="flow-box">
+          <strong>2. API FastAPI</strong>
+          Validation, conversion en <code>float32</code>, inférence du modèle PPO.
+        </div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="flow-box">
+          <strong>3. Action</strong>
+          Entier 0–3 renvoyé à la GUI, puis appliqué avec <code>env.step(action)</code>.
+        </div>
+      </div>
+      <div class="return-flow">
+        L’environnement produit alors l’état suivant, la récompense et le signal de fin ;
+        la boucle recommence tant que l’épisode n’est pas terminé.
+      </div>
+
+      <div class="callout">
+        <strong>Pourquoi la récompense ne traverse-t-elle pas l’API ?</strong>
+        Le modèle livré est une politique d’inférence figée. À l’exécution, il a
+        uniquement besoin de l’état courant pour choisir une action. La récompense
+        est calculée après cette action par LunarLander ; la GUI la cumule et la
+        journalise localement. Elle serait nécessaire dans une API d’entraînement,
+        mais pas dans ce contrat d’inférence.
+      </div>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <div>
+            <h3>L’API est fonctionnelle et respecte les flux de données RL (état → action).</h3>
+          </div>
+          <span class="status tested">Démontré et testé</span>
+        </div>
+        <p>
+          Les routes <code>POST /predict</code> et <code>POST /play</code> reçoivent
+          un objet <code>StateRequest</code>. La méthode commune
+          <code>predict_action()</code> transforme l’état en tableau NumPy,
+          interroge PPO en mode déterministe puis renvoie un <code>ActionResponse</code>.
+        </p>
+        <div class="grid-2">
+          <div>
+            <h4>Requête</h4>
+            <pre tabindex="0">{
+  "state": [0.0, 1.0, 0.0, -0.1, 0.0, 0.0, 0.0, 0.0],
+  "deterministic": true
+}</pre>
+          </div>
+          <div>
+            <h4>Réponse</h4>
+            <pre tabindex="0">{
+  "action": 2,
+  "action_label": "moteur principal",
+  "model_id": "ppo_optuna"
+}</pre>
+          </div>
+        </div>
+        <p class="evidence">
+          <strong>Preuve :</strong> <a href="api/app.py"><code>StateRequest</code>,
+          <code>ActionResponse</code>, <code>predict_action()</code> et les routes
+          de <code>api/app.py</code></a>.
+        </p>
+      </div>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>Le code de l’API est bien structuré et documenté.</h3>
+          <span class="status proved">Démontré</span>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <h4>Contrats explicites</h4>
+            <p>Les entrées et sorties sont des modèles Pydantic typés, également publiés dans la documentation OpenAPI automatique.</p>
+          </div>
+          <div class="card">
+            <h4>Responsabilités séparées</h4>
+            <p>Chemin du modèle, chargement, validation, inférence et routes sont isolés dans des fonctions courtes.</p>
+          </div>
+          <div class="card">
+            <h4>Modèle chargé une fois</h4>
+            <p>Le cycle de vie FastAPI charge PPO au démarrage et le conserve dans l’état de l’application.</p>
+          </div>
+        </div>
+        <p>
+          Le gestionnaire d’erreur dédié produit aussi une réponse HTTP 422
+          sérialisable pour les valeurs invalides, y compris <code>NaN</code> et
+          les infinis.
+        </p>
+        <p class="evidence">
+          <strong>Preuve :</strong> <a href="api/app.py"><code>lifespan()</code>,
+          <code>validation_error_handler()</code> et docstrings de <code>api/app.py</code></a>.
+        </p>
+      </div>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>L’API est testée avec des tests unitaires ou des exemples démontrant une interaction réussie avec l’environnement.</h3>
+          <span class="status tested">11 tests réussis</span>
+        </div>
+        <ul>
+          <li>disponibilité du service et chargement du modèle ;</li>
+          <li>prédiction valide et cohérence avec le modèle sauvegardé ;</li>
+          <li>longueurs, types, champ absent, <code>NaN</code> et infinis refusés ;</li>
+          <li>épisode LunarLander complet : chaque état est envoyé à <code>/play</code>, chaque action retournée est exécutée, et l’atterrissage est réussi.</li>
+        </ul>
+        <p>
+          Le scénario bout en bout utilise la seed 10000, atteint une récompense
+          totale supérieure à 200, reçoit le bonus final de 100 et termine avant
+          1 000 pas.
+        </p>
+        <p class="evidence">
+          <strong>Preuve :</strong> <a href="api/tests/test_api.py"><code>api/tests/test_api.py</code></a>.
+          Commande reproductible :
+          <code>uv run pytest ASTRODYNAMICS/api/tests -q</code>.
+        </p>
+      </div>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>L’étudiant explique les choix d’architecture de l’API lors de sa session de bilan du projet.</h3>
+          <span class="status oral">À présenter</span>
+        </div>
+        <div class="oral-box">
+          <strong>Réponse orale proposée — environ 40 secondes</strong>
+          « J’ai séparé l’environnement de simulation et le modèle d’inférence.
+          La GUI possède LunarLander, envoie son état à l’API puis applique
+          l’action reçue. J’ai choisi FastAPI parce que le contrat est petit,
+          synchrone et facile à valider avec Pydantic. Le modèle est chargé une
+          seule fois au démarrage pour éviter le coût d’un rechargement à chaque
+          pas. L’API reste sans état de session : elle peut donc servir la GUI ou
+          un autre client sans dépendre du déroulement d’un épisode. »
+        </div>
+      </div>
+    </section>
+
+    <section id="formatage">
+      <p class="eyebrow" style="color: var(--blue)">Compétence 2</p>
+      <h2>2. Formater les données et configurer une API</h2>
+      <p><strong>Livrables demandés :</strong> API <code>.py</code> et notebook <code>.ipynb</code></p>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>Le notebook documente le formatage des données avec une section dédiée aux états, actions et récompenses.</h3>
+          <span class="status proved">Démontré</span>
+        </div>
+        <p>
+          La section <strong>14. Formatage des données pour l’API</strong> décrit
+          le trajet du JSON jusqu’au modèle et contient une cellule exécutable
+          <code>format_api_state()</code>. Elle précise aussi la place de la
+          récompense : conversion en <code>float</code>, cumul par épisode et
+          journalisation dans les CSV côté environnement.
+        </p>
+        <p class="evidence">
+          <strong>Preuve :</strong> <a href="NB.ipynb"><code>NB.ipynb</code>,
+          cellules de la section 14</a>. Les fonctions d’évaluation du notebook
+          enregistrent également état, état suivant, action et récompense à chaque pas.
+        </p>
+      </div>
+
+      <h3>Contrat de l’observation LunarLander-v3</h3>
+      <div class="table-wrap" role="region" tabindex="0" aria-label="Contrat détaillé de l’observation LunarLander-v3">
+        <table>
+          <thead>
+            <tr>
+              <th>Indice</th>
+              <th>Information</th>
+              <th>Format transmis</th>
+              <th>Contrôle API</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td>Position horizontale</td><td rowspan="8">Nombre JSON, puis <code>np.float32</code></td><td rowspan="8">Exactement 8 valeurs numériques finies</td></tr>
+            <tr><td>1</td><td>Position verticale</td></tr>
+            <tr><td>2</td><td>Vitesse horizontale</td></tr>
+            <tr><td>3</td><td>Vitesse verticale</td></tr>
+            <tr><td>4</td><td>Angle du module</td></tr>
+            <tr><td>5</td><td>Vitesse angulaire</td></tr>
+            <tr><td>6</td><td>Contact de la jambe gauche</td></tr>
+            <tr><td>7</td><td>Contact de la jambe droite</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>L’API gère correctement les formats spécifiques à LunarLander-v3, notamment JSON et tenseurs.</h3>
+          <span class="status tested">Démontré et testé</span>
+        </div>
+        <div class="flow" role="img" aria-label="Conversions de format de JSON à l'action entière">
+          <div class="flow-box">
+            <strong>Réseau HTTP</strong>
+            Liste JSON de longueur 8. Format lisible, portable et indépendant de NumPy ou PyTorch.
+          </div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="flow-box">
+            <strong>Adaptateur API</strong>
+            <code>np.asarray(state, dtype=np.float32)</code>. Pydantic a déjà validé taille et valeurs.
+          </div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="flow-box">
+            <strong>Modèle PPO</strong>
+            Stable-Baselines3 réalise son calcul tensoriel interne ; la sortie est normalisée en entier 0–3.
+          </div>
+        </div>
+        <p>
+          Aucun tenseur binaire n’est envoyé sur le réseau. C’est volontaire :
+          pour huit nombres par requête, JSON évite de coupler les clients à
+          PyTorch. La conversion vers les tableaux puis les tenseurs reste du côté
+          serveur, au plus près du modèle.
+        </p>
+        <div class="grid-2">
+          <div class="card">
+            <h4>État</h4>
+            <p><code>list[float]</code> JSON → tableau <code>float32</code> de forme <code>(8,)</code>.</p>
+          </div>
+          <div class="card">
+            <h4>Action</h4>
+            <p>Sortie du modèle → scalaire Python <code>int</code> appartenant à <code>{0, 1, 2, 3}</code>.</p>
+          </div>
+          <div class="card">
+            <h4>Récompense</h4>
+            <p>Scalaire de l’environnement → <code>float</code>, ajouté au cumul et sauvegardé ; il n’est pas une entrée d’inférence.</p>
+          </div>
+          <div class="card">
+            <h4>Erreurs</h4>
+            <p>Champ absent, mauvaise longueur, type non numérique ou valeur non finie → réponse HTTP 422.</p>
+          </div>
+        </div>
+        <p class="evidence">
+          <strong>Preuve :</strong> <a href="api/app.py"><code>StateRequest</code> et
+          <code>predict_action()</code></a> ; cas invalides dans
+          <a href="api/tests/test_api.py"><code>api/tests/test_api.py</code></a>.
+        </p>
+      </div>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>L’étudiant justifie ses choix de formatage lors de sa session de validation.</h3>
+          <span class="status oral">À présenter</span>
+        </div>
+        <div class="oral-box">
+          <strong>Réponse orale proposée — environ 35 secondes</strong>
+          « J’utilise JSON car l’observation ne contient que huit nombres et doit
+          pouvoir être envoyée par n’importe quel client HTTP. L’API impose la
+          longueur et refuse les valeurs non finies, puis convertit en
+          <code>float32</code>, le format attendu par le modèle. Les tenseurs
+          restent internes à Stable-Baselines3 pour ne pas exposer une dépendance
+          PyTorch dans le contrat. Enfin, l’action redevient un entier JSON et la
+          récompense reste côté environnement, puisqu’elle arrive après
+          l’inférence. »
+        </div>
+      </div>
+    </section>
+
+    <section id="exposition">
+      <p class="eyebrow" style="color: var(--blue)">Compétence 3</p>
+      <h2>3. Identifier et choisir un système d’exposition des résultats</h2>
+      <p>
+        <strong>Livrables demandés :</strong> interface graphique <code>.py</code>,
+        tableau de bord <code>.py</code> et vidéo <code>.mp4</code>
+      </p>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>La GUI affiche une partie jouée par l’agent.</h3>
+          <span class="status tested">Démontré et testé</span>
+        </div>
+        <p>
+          L’interface Streamlit vérifie d’abord la santé de l’API, lance une
+          simulation puis affiche les images natives de LunarLander. À chaque pas,
+          elle montre l’action, la récompense cumulée et l’altitude. À la fin, elle
+          présente le score, le nombre de pas, le proxy de carburant, la courbe de
+          récompense et la répartition des actions.
+        </p>
+        <ol>
+          <li><code>play_episode()</code> joue réellement l’épisode en interrogeant <code>/play</code>.</li>
+          <li><code>replay_episode()</code> reproduit la même seed et les mêmes actions pour un affichage fluide.</li>
+          <li><code>save_run()</code> conserve le résumé et la télémétrie détaillée.</li>
+        </ol>
+        <p class="evidence">
+          <strong>Preuve :</strong> <a href="gui/app.py"><code>gui/app.py</code></a> et
+          <a href="gui/tests/test_gui.py"><code>gui/tests/test_gui.py</code></a>.
+        </p>
+      </div>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>Le tableau de bord présente des métriques pertinentes.</h3>
+          <span class="status tested">Démontré et testé</span>
+        </div>
+        <p>Sur l’évaluation finale de 100 épisodes, le dashboard expose notamment :</p>
+        <div class="metrics">
+          <div class="metric"><strong>268,98</strong><span>récompense moyenne</span></div>
+          <div class="metric"><strong>37,46</strong><span>écart-type des récompenses</span></div>
+          <div class="metric"><strong>96 / 2 / 2</strong><span>succès / crashs / épisodes tronqués</span></div>
+          <div class="metric"><strong>262,8</strong><span>pas moyens avant la fin</span></div>
+          <div class="metric"><strong>96 %</strong><span>taux d’atterrissage réussi</span></div>
+          <div class="metric"><strong>272,86</strong><span>récompense médiane</span></div>
+          <div class="metric"><strong>78,40</strong><span>récompense minimale</span></div>
+          <div class="metric"><strong>35,79</strong><span>proxy carburant moyen</span></div>
+        </div>
+        <p>
+          La page « Épisodes » affiche la courbe des récompenses, une moyenne
+          glissante sur 10 épisodes, la dispersion, la durée des épisodes et la
+          distribution des actions. La synthèse donne moyenne et écart-type sur
+          les 100 épisodes, conformément à la grille.
+        </p>
+        <p class="evidence">
+          <strong>Preuve :</strong> <a href="dashboard/app.py"><code>dashboard/app.py</code></a>,
+          <a href="artifacts/evaluations/ppo_optuna_final_100/episodes.csv">données des 100 épisodes</a>
+          et <a href="dashboard/tests/test_dashboard.py"><code>tests dashboard</code></a>.
+        </p>
+      </div>
+
+      <h3>Pourquoi Streamlit ?</h3>
+      <div class="table-wrap" role="region" tabindex="0" aria-label="Comparaison des systèmes d’exposition étudiés">
+        <table>
+          <thead>
+            <tr>
+              <th>Solution</th>
+              <th>Intérêt</th>
+              <th>Limite pour ce projet</th>
+              <th>Décision</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Streamlit</strong></td>
+              <td>Python uniquement, images et graphiques natifs, filtres interactifs, lancement local simple.</td>
+              <td>Personnalisation visuelle moins libre qu’un front-end dédié.</td>
+              <td><span class="status proved">Retenu</span></td>
+            </tr>
+            <tr>
+              <td>Gradio</td>
+              <td>Très efficace pour une démonstration entrée/sortie d’un modèle.</td>
+              <td>Moins naturel pour raconter plusieurs étapes d’analyse et explorer des CSV.</td>
+              <td>Non retenu</td>
+            </tr>
+            <tr>
+              <td>Looker Studio</td>
+              <td>Bon outil de reporting partagé et connecté à des sources en ligne.</td>
+              <td>Ajoute un service externe et convient moins au replay local d’un environnement Gymnasium.</td>
+              <td>Non retenu</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Un même outil sert donc la démonstration et l’analyse, tandis que les
+        responsabilités restent séparées dans deux fichiers : la GUI pour
+        observer une partie, le dashboard pour comparer les résultats.
+      </p>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>L’agent en action manœuvre sans erreur, réussit à atterrir et obtient une récompense de victoire.</h3>
+          <span class="status proved">Vidéo vérifiée</span>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h4>Fichier livré</h4>
+            <p><a href="artifacts/video/eagle1-success-episode-0.mp4"><code>eagle1-success-episode-0.mp4</code></a></p>
+            <p class="small muted">H.264 · 600 × 400 · 11 images/s · environ 24,9 s</p>
+          </div>
+          <div class="card">
+            <h4>Épisode enregistré</h4>
+            <p>Seed <strong>10093</strong> · récompense <strong>313,57</strong> · <strong>273 pas</strong> · récompense finale <strong>+100</strong>.</p>
+          </div>
+        </div>
+        <p>
+          Le bonus terminal de 100 est attribué par l’environnement lors de
+          l’atterrissage. Les valeurs de la vidéo correspondent à l’épisode 93 du
+          fichier d’évaluation final, ce qui relie la démonstration visuelle aux
+          données enregistrées.
+        </p>
+        <p class="evidence">
+          <strong>Preuve :</strong> <a href="artifacts/video/eagle1-success-episode-0.mp4">vidéo MP4</a>,
+          <a href="artifacts/evaluations/ppo_optuna_final_100/episodes.csv"><code>episodes.csv</code></a>
+          et <a href="artifacts/evaluations/ppo_optuna_final_100/steps.csv"><code>steps.csv</code></a>.
+        </p>
+      </div>
+
+      <div class="oral-box">
+        <strong>Justification orale proposée — environ 35 secondes</strong>
+        « J’ai choisi Streamlit car la GUI et le dashboard manipulent déjà des
+        objets Python : images NumPy, tableaux pandas et métriques. Je peux donc
+        démontrer l’agent et explorer ses résultats sans développer un front-end
+        JavaScript ni dépendre d’un service externe. J’ai séparé les deux usages :
+        la GUI répond à “que fait l’agent maintenant ?”, le dashboard à “est-il
+        performant et robuste sur plusieurs épisodes ?”. »
+      </div>
+    </section>
+
+    <section id="dashboard">
+      <p class="eyebrow" style="color: var(--blue)">Compétence 4</p>
+      <h2>4. Construire des tableaux de bord interactifs</h2>
+      <p><strong>Livrable demandé :</strong> tableau de bord <code>.py</code></p>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>Des filtres et des graphiques dynamiques sont implémentés.</h3>
+          <span class="status tested">Démontré et testé</span>
+        </div>
+        <div class="table-wrap" role="region" tabindex="0" aria-label="Onglets, interactions et visualisations du tableau de bord">
+          <table>
+            <thead>
+              <tr>
+                <th>Onglet</th>
+                <th>Question traitée</th>
+                <th>Interactions</th>
+                <th>Visualisations</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Synthèse</td>
+                <td>La mission est-elle réussie ?</td>
+                <td>Lecture immédiate des indicateurs finaux.</td>
+                <td>Moyenne, écart-type, médiane, taux de succès et comparaison des politiques.</td>
+              </tr>
+              <tr>
+                <td>Apprentissage</td>
+                <td>Comment les performances ont-elles progressé ?</td>
+                <td>Sélection multiple des courbes à comparer.</td>
+                <td>Phases du projet et courbes d’apprentissage dynamiques.</td>
+              </tr>
+              <tr>
+                <td>Épisodes</td>
+                <td>Où se situent la variabilité et les échecs ?</td>
+                <td>Choix de l’évaluation, filtre par issue, curseur de récompense.</td>
+                <td>Historique, moyenne glissante, nuage récompense/carburant et actions.</td>
+              </tr>
+              <tr>
+                <td>Optuna</td>
+                <td>Pourquoi cette configuration finale ?</td>
+                <td>Exploration des essais, du raffinement et des finalistes.</td>
+                <td>Essais, importance des paramètres, gamma et robustesse.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="evidence">
+          <strong>Preuve :</strong> <a href="dashboard/app.py"><code>main()</code>,
+          <code>render_phases()</code>, <code>render_episodes()</code> et
+          <code>render_optuna()</code></a>. Les tests contrôlent les données, la
+          moyenne glissante, les comptes d’actions et le rendu des quatre onglets.
+        </p>
+      </div>
+
+      <div class="criterion">
+        <div class="criterion-head">
+          <h3>L’étudiant justifie les choix de design du tableau de bord en utilisant le storytelling.</h3>
+          <span class="status oral">Argumentaire fourni</span>
+        </div>
+        <p>
+          Le dashboard ne présente pas toutes les données au même niveau. Il suit
+          une progression du verdict vers l’explication, puis vers la décision
+          technique :
+        </p>
+        <div class="sequence">
+          <div class="card">
+            <h4>Verdict</h4>
+            <p>Commencer par le résultat final et le taux de succès pour donner immédiatement le sens de la mission.</p>
+          </div>
+          <div class="card">
+            <h4>Progression</h4>
+            <p>Montrer ensuite comment l’agent a appris et comment les phases ont amélioré le score.</p>
+          </div>
+          <div class="card">
+            <h4>Diagnostic</h4>
+            <p>Permettre l’exploration des épisodes afin de comprendre la dispersion et les cas difficiles.</p>
+          </div>
+          <div class="card">
+            <h4>Décision</h4>
+            <p>Terminer par Optuna pour justifier le réglage final à partir des essais et de la robustesse.</p>
+          </div>
+        </div>
+        <p>
+          Le design reste sobre : libellés en français, indicateurs regroupés,
+          filtres placés près des graphiques qu’ils contrôlent et détail tabulaire
+          conservé en fin de parcours. Cette hiérarchie évite de noyer le verdict
+          dans la télémétrie.
+        </p>
+        <div class="oral-box">
+          <strong>Réponse orale proposée — environ 40 secondes</strong>
+          « Mon storytelling part de la question principale : est-ce que
+          l’atterrissage est fiable ? La synthèse donne d’abord le verdict. Je
+          remonte ensuite vers l’apprentissage pour expliquer la progression,
+          puis vers les épisodes pour analyser les variations et les échecs.
+          Enfin, l’onglet Optuna montre pourquoi la configuration finale a été
+          retenue. Les filtres arrivent au moment où l’utilisateur veut
+          investiguer ; ils ne compliquent pas la première lecture. »
+        </div>
+      </div>
+    </section>
+
+    <section id="oral">
+      <p class="eyebrow" style="color: var(--blue)">Soutenance</p>
+      <h2>5. Trame de présentation orale en cinq minutes</h2>
+      <ol>
+        <li><strong>40 s — Problème :</strong> présenter LunarLander-v3, l’observation à huit valeurs et les quatre actions.</li>
+        <li><strong>60 s — Architecture :</strong> tracer la boucle GUI → API → PPO → action → environnement et expliquer pourquoi la récompense reste côté environnement.</li>
+        <li><strong>50 s — Formatage :</strong> montrer le JSON, la validation Pydantic et la conversion <code>float32</code>.</li>
+        <li><strong>60 s — Démonstration :</strong> lancer la GUI ou la vidéo et commenter le score final de 313,57.</li>
+        <li><strong>70 s — Résultats :</strong> parcourir Synthèse puis Épisodes : 268,98 de moyenne, 37,46 d’écart-type et 96 % de réussite.</li>
+        <li><strong>40 s — Qualité :</strong> conclure avec l’épisode bout en bout et les 19 tests de la couche de présentation.</li>
+      </ol>
+
+      <h3>Checklist avant la démonstration</h3>
+      <ul class="checklist">
+        <li>Lancer les trois services avec <code>uv run python launch_demo.py</code>.</li>
+        <li>Vérifier que la page <code>/health</code> indique que le modèle est chargé.</li>
+        <li>Préparer une seed de réussite connue, par exemple 10000 pour le test API.</li>
+        <li>Garder la vidéo MP4 disponible comme démonstration de secours reproductible.</li>
+        <li>Ouvrir le dashboard directement sur la synthèse de l’évaluation finale.</li>
+        <li>Ne pas confondre moyenne glissante d’affichage et statistiques calculées sur les 100 épisodes.</li>
+      </ul>
+    </section>
+
+    <section id="preuves">
+      <p class="eyebrow" style="color: var(--blue)">Traçabilité</p>
+      <h2>6. Index des preuves</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h4>Code et documentation</h4>
+          <ul>
+            <li><a href="api/app.py">API FastAPI</a></li>
+            <li><a href="NB.ipynb">Notebook principal</a></li>
+            <li><a href="gui/app.py">Interface de démonstration</a></li>
+            <li><a href="dashboard/app.py">Tableau de bord</a></li>
+            <li><a href="DOCUMENTATION_TECHNIQUE.html">Documentation technique générale</a></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Tests</h4>
+          <ul>
+            <li><a href="api/tests/test_api.py">Tests API</a></li>
+            <li><a href="gui/tests/test_gui.py">Tests GUI</a></li>
+            <li><a href="dashboard/tests/test_dashboard.py">Tests dashboard</a></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Données finales</h4>
+          <ul>
+            <li><a href="artifacts/evaluations/ppo_optuna_final_100/summary.json">Résumé de l’évaluation</a></li>
+            <li><a href="artifacts/evaluations/ppo_optuna_final_100/episodes.csv">Résultats par épisode</a></li>
+            <li><a href="artifacts/evaluations/ppo_optuna_final_100/steps.csv">Télémétrie par pas</a></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Démonstration</h4>
+          <ul>
+            <li><a href="artifacts/video/eagle1-success-episode-0.mp4">Vidéo d’atterrissage réussi</a></li>
+            <li><a href="artifacts/models/ppo_optuna/best_model.zip">Modèle PPO final</a></li>
+            <li><a href="README.md">Instructions de lancement</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="small muted">
+        Vérification locale réalisée avec Python 3.12 et <code>uv</code>. Le
+        document décrit l’état effectivement présent dans le sous-projet et
+        n’exige aucun service en ligne pour être consulté.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p><strong>Eagle-1 — Mission AstroDynamics</strong></p>
+      <p>
+        Dossier complémentaire à la
+        <a href="DOCUMENTATION_TECHNIQUE.html">documentation technique générale</a>.
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

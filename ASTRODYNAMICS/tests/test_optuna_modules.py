@@ -77,6 +77,12 @@ def test_default_search_scores_each_trial_on_several_seeds():
     assert len(search.SearchConfig().train_seeds) >= 2
 
 
+def test_fast_mode_uses_an_isolated_study():
+    """Le smoke test ne doit jamais ajouter d'essais à la campagne officielle."""
+    assert search.FAST_STUDY_NAME != search.STUDY_NAME
+    assert search.FAST_STUDY_DIR != search.STUDY_DIR
+
+
 # --- Cloisonnement des seeds ------------------------------------------------
 
 def test_search_selection_and_test_seed_ranges_are_disjoint():
@@ -105,6 +111,16 @@ def test_final_selection_never_uses_test_seeds():
 def test_final_training_seeds_differ_from_robustness_seeds():
     """L'entraînement final rejoue des seeds neuves, pas celles de la robustesse."""
     assert set(final.FINAL_TRAIN_SEEDS).isdisjoint(select.ROBUST_TRAIN_SEEDS)
+
+
+def test_checkpoint_evaluation_has_its_own_seed_range():
+    """Le choix d'un checkpoint ne doit pas consommer les épisodes de sélection ou de test."""
+    starts = {
+        final.CHECKPOINT_EVAL_SEED_BASE,
+        final.SELECTION_SEED_START,
+        final.FINAL_SEED_START,
+    }
+    assert len(starts) == 3
 
 
 # --- build_gamma_grid : grille centrée, régulière en horizon effectif -------

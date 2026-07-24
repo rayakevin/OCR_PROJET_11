@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation technique — Exercice 2</title>
+  <style>
+    :root {
+      --ink: #17242d;
+      --navy: #12384a;
+      --blue: #176780;
+      --orange: #c26a2e;
+      --line: #cbd5da;
+      --paper: #ffffff;
+      --surface: #f4f6f7;
+      --soft-blue: #eaf3f6;
+      --soft-orange: #f9eee6;
+      --green: #26735b;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--surface); font: 15px/1.58 Inter, "Segoe UI", Arial, sans-serif; }
+    main { width: min(1080px, calc(100% - 32px)); margin: 28px auto; padding: 52px 64px; background: var(--paper); box-shadow: 0 8px 30px rgba(18, 56, 74, .09); }
+    h1, h2, h3 { color: var(--navy); line-height: 1.2; }
+    h1 { margin: 6px 0 12px; font-size: clamp(2rem, 5vw, 3.2rem); }
+    h2 { margin: 46px 0 18px; padding-bottom: 8px; border-bottom: 2px solid var(--blue); font-size: 1.55rem; }
+    h3 { margin: 24px 0 8px; font-size: 1.08rem; }
+    p { margin: 8px 0 14px; }
+    a { color: var(--blue); }
+    code { padding: .08rem .3rem; border-radius: 3px; background: #edf1f3; font-family: "SFMono-Regular", Consolas, monospace; font-size: .9em; }
+    .kicker { color: var(--blue); font-size: .76rem; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; }
+    .lead { max-width: 780px; color: #4c606b; font-size: 1.08rem; }
+    .topline { height: 5px; margin: -52px -64px 42px; background: var(--orange); }
+    .actions { float: right; }
+    button { padding: 8px 13px; color: var(--navy); background: white; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; }
+    .tags, .nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+    .tag, .nav a { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--navy); background: white; font-size: .84rem; text-decoration: none; }
+    .tag.accent { border-color: #e7b592; background: var(--soft-orange); }
+    .toc { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px 28px; margin: 28px 0; padding: 22px; background: var(--surface); border-left: 4px solid var(--blue); }
+    .toc a { text-decoration: none; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 18px 0; }
+    .card, .callout { padding: 16px 18px; border: 1px solid var(--line); border-radius: 5px; background: white; }
+    .card strong { display: block; color: var(--navy); font-size: 1.2rem; }
+    .callout { margin: 18px 0; border-left: 4px solid var(--green); background: #edf7f3; }
+    .warning { border-left-color: var(--orange); background: var(--soft-orange); }
+    .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: stretch; margin: 22px 0; }
+    .flow div { position: relative; padding: 14px 10px; text-align: center; color: var(--navy); background: var(--soft-blue); border: 1px solid #b9d2dc; border-radius: 5px; }
+    .flow div:not(:last-child)::after { content: "→"; position: absolute; right: -16px; top: 31%; z-index: 2; color: var(--orange); font-weight: 800; }
+    table { width: 100%; margin: 14px 0 22px; border-collapse: collapse; }
+    th, td { padding: 10px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--navy); background: #e9eef0; }
+    tbody tr:nth-child(even) { background: #fafbfb; }
+    .tree { padding: 18px 20px; overflow-x: auto; color: #e9f5f8; background: #142f3c; border-radius: 5px; font: 13px/1.5 "SFMono-Regular", Consolas, monospace; }
+    .formula { overflow-x: auto; padding: 18px; text-align: center; background: var(--soft-blue); border: 1px solid #b9d2dc; font: 1.05rem "Cambria Math", Georgia, serif; }
+    footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: #667780; font-size: .85rem; }
+    @media (max-width: 760px) {
+      main { width: 100%; margin: 0; padding: 34px 22px; }
+      .topline { margin: -34px -22px 28px; }
+      .actions { float: none; margin-bottom: 14px; }
+      .toc, .cards { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .flow div:not(:last-child)::after { content: "↓"; right: 49%; top: auto; bottom: -18px; }
+    }
+    @media print {
+      body { background: white; font-size: 11pt; }
+      main { width: 100%; margin: 0; padding: 18mm; box-shadow: none; }
+      .actions, .nav { display: none; }
+      h2 { break-after: avoid; }
+      table, .card, .callout { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="topline"></div>
+  <div class="actions"><button onclick="window.print()">Imprimer / PDF</button></div>
+  <div class="kicker">Projet 11 · Parcours Reinforcement Learning</div>
+  <h1>Exercice 2<br>Q-Learning tabulaire</h1>
+  <p class="lead">
+    Architecture, fonctionnement et lecture détaillée du notebook qui
+    implémente une Q-table, l'exploration epsilon-greedy et la mise à jour de
+    Bellman sur FrozenLake.
+  </p>
+  <div class="tags">
+    <span class="tag accent">FrozenLake-v1</span>
+    <span class="tag">NumPy</span>
+    <span class="tag">Q-Learning</span>
+    <span class="tag">7 cellules de code</span>
+    <span class="tag">Q-table + 2 GIF</span>
+  </div>
+  <nav class="nav" aria-label="Navigation entre exercices">
+    <a href="../EXERCICE_1/DOCUMENTATION_TECHNIQUE.html">Exercice 1</a>
+    <a href="../EXERCICE_2/DOCUMENTATION_TECHNIQUE.html">Exercice 2</a>
+    <a href="../EXERCICE_3/DOCUMENTATION_TECHNIQUE.html">Exercice 3</a>
+    <a href="../DOCUMENTATION_EXERCICES.html">Vue d'ensemble</a>
+  </nav>
+
+  <div class="toc">
+    <a href="#perimetre">1. Objectif et périmètre</a>
+    <a href="#architecture">2. Architecture et flux</a>
+    <a href="#notebook">3. Déroulé du notebook</a>
+    <a href="#elements">4. Fonctions et calculs importants</a>
+    <a href="#artefacts">5. Données et artefacts</a>
+    <a href="#resultats">6. Résultats et reproductibilité</a>
+    <a href="#limites">7. Limites et prolongement</a>
+  </div>
+
+  <section id="perimetre">
+    <h2>1. Objectif et périmètre</h2>
+    <p>
+      Cet exercice ouvre la boîte noire de l'apprentissage. Avec seulement
+      16 états et 4 actions, FrozenLake permet de représenter explicitement
+      chaque valeur <code>Q(état, action)</code> dans un tableau.
+    </p>
+    <div class="cards">
+      <div class="card"><strong>16</strong>états discrets</div>
+      <div class="card"><strong>4</strong>actions possibles</div>
+      <div class="card"><strong>1</strong>récompense, uniquement au but</div>
+    </div>
+    <div class="callout">
+      <strong>Périmètre étudiant crédible.</strong> Environ 6 à 8 heures :
+      formalisation du Q-Learning, implémentation de la boucle, choix des
+      paramètres, visualisations, évaluation et rédaction.
+    </div>
+  </section>
+
+  <section id="architecture">
+    <h2>2. Architecture et flux</h2>
+    <div class="flow" aria-label="Flux du notebook">
+      <div>Créer<br>le lac</div>
+      <div>Initialiser<br>Q à zéro</div>
+      <div>Explorer<br>ou exploiter</div>
+      <div>Mettre à jour<br>avec Bellman</div>
+      <div>Évaluer<br>et sauvegarder</div>
+    </div>
+    <p class="formula">
+      Q(s,a) ← Q(s,a) + α [ r + γ max Q(s′,a′) − Q(s,a) ]
+    </p>
+    <p>
+      La Q-table est le seul état appris. Le notebook l'utilise ensuite pour
+      tracer une heatmap, déduire une politique, évaluer 1 000 épisodes et
+      générer des exemples visuels.
+    </p>
+  </section>
+
+  <section id="notebook">
+    <h2>3. Déroulé du notebook</h2>
+    <table>
+      <thead><tr><th>Partie</th><th>Responsabilité</th><th>Sortie</th></tr></thead>
+      <tbody>
+        <tr><td>1. Environnement</td><td>Présenter la grille, les états, les actions et la glisse.</td><td>Contrat de la tâche</td></tr>
+        <tr><td>2. Théorie</td><td>Expliquer Q, epsilon-greedy et la cible de Bellman.</td><td>Formule traduite en code</td></tr>
+        <tr><td>3. Paramètres</td><td>Définir 20 000 épisodes, α=0,1, γ=0,99 et la décroissance d'epsilon.</td><td>Configuration lisible</td></tr>
+        <tr><td>4. Entraînement</td><td>Mettre à jour la table à chaque transition et stocker les récompenses.</td><td>Courbe lissée</td></tr>
+        <tr><td>5. Évaluation</td><td>Exploiter uniquement sur 1 000 seeds réservées.</td><td>Taux de réussite et fichier NPY</td></tr>
+        <tr><td>6. Lecture</td><td>Afficher la table et la meilleure action par case.</td><td>Heatmap et politique</td></tr>
+        <tr><td>7. Visualisation</td><td>Trouver une réussite et un échec reproductibles.</td><td>Deux GIF</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="elements">
+    <h2>4. Fonctions et calculs importants</h2>
+    <table>
+      <thead><tr><th>Élément</th><th>Fonctionnement</th></tr></thead>
+      <tbody>
+        <tr><td><code>q_table</code></td><td>Matrice 16 × 4 ; une ligne par état et une colonne par action.</td></tr>
+        <tr><td><code>rng.random()</code></td><td>Décide si l'agent explore ; le générateur est seedé pour reproduire l'entraînement.</td></tr>
+        <tr><td><code>np.argmax(q_table[state])</code></td><td>Retourne l'action de plus forte valeur connue.</td></tr>
+        <tr><td><code>valeur_future</code></td><td>Maximum de la ligne suivante, ramené à zéro si l'épisode est fini.</td></tr>
+        <tr><td><code>jouer_un_episode()</code></td><td>Joue la politique apprise dans un environnement RGB et renvoie images et issue.</td></tr>
+        <tr><td><code>sauver_et_afficher()</code></td><td>Transforme les images en GIF puis l'affiche dans le notebook.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warning">
+      Le taux pendant l'entraînement n'est pas l'évaluation finale : epsilon
+      reste à 0,05, donc environ 5 % des actions sont encore exploratoires.
+      L'évaluation, elle, utilise exclusivement <code>argmax</code>.
+    </div>
+  </section>
+
+  <section id="artefacts">
+    <h2>5. Données et artefacts</h2>
+    <div class="tree">EXERCICE_2/
+├── NB_EXO_2.ipynb
+├── README.md
+├── DOCUMENTATION_TECHNIQUE.html
+├── q_table_frozenlake.npy
+├── frozenlake_reussite.gif
+└── frozenlake_echec.gif</div>
+    <table>
+      <thead><tr><th>Fichier</th><th>Contenu</th><th>Réutilisation</th></tr></thead>
+      <tbody>
+        <tr><td><code>q_table_frozenlake.npy</code></td><td>64 valeurs flottantes organisées en 16 × 4.</td><td><code>np.load()</code>, inspection ou rejeu.</td></tr>
+        <tr><td><code>frozenlake_reussite.gif</code></td><td>Épisode atteignant le but.</td><td>Illustrer la politique efficace malgré la glisse.</td></tr>
+        <tr><td><code>frozenlake_echec.gif</code></td><td>Épisode sans récompense, potentiellement tronqué.</td><td>Montrer que la dynamique reste stochastique.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="resultats">
+    <h2>6. Résultats et reproductibilité</h2>
+    <div class="cards">
+      <div class="card"><strong>51,3 %</strong>fin d'entraînement, exploration incluse</div>
+      <div class="card"><strong>72,9 %</strong>évaluation sur 1 000 seeds</div>
+      <div class="card"><strong>0,05</strong>epsilon final</div>
+    </div>
+    <p>
+      L'entraînement utilise les seeds 42 à 20 041. L'évaluation utilise la
+      plage indépendante 10 000 à 10 999 ; la recherche des GIF commence à
+      20 000. Ces choix rendent les sorties reproductibles tout en séparant
+      apprentissage et mesure finale.
+    </p>
+    <pre class="tree">uv run jupyter nbconvert --to notebook --execute --inplace NB_EXO_2.ipynb \
+  --ExecutePreprocessor.timeout=600</pre>
+  </section>
+
+  <section id="limites">
+    <h2>7. Limites et prolongement</h2>
+    <ul>
+      <li>la Q-table devient trop grande lorsque le nombre d'états augmente ;</li>
+      <li>le résultat dépend de la carte et des hyperparamètres choisis ;</li>
+      <li>la glisse empêche une politique déterministe de garantir le succès ;</li>
+      <li>l'exercice 3 remplace la table par un réseau pour traiter des observations continues.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Documentation autonome générée pour harmoniser les exercices 1, 2 et 3 ·
+    Sources de vérité : notebook exécuté et artefacts du dossier.
+  </footer>
+</main>
+</body>
+</html>

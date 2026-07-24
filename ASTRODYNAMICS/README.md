@@ -36,6 +36,10 @@ sélection — jamais sur les 100 épisodes réservés.
 
 L'organisation technique d'ensemble (flux, modules, contrats de données,
 décisions justifiées) est décrite dans [`ARCHITECTURE.md`](ARCHITECTURE.md).
+Une version plus détaillée et illustrée est disponible dans
+[`DOCUMENTATION_TECHNIQUE.html`](DOCUMENTATION_TECHNIQUE.html).
+La réponse point par point à la grille API, GUI et tableau de bord est disponible
+dans [`GRILLE_EVALUATION_API_GUI_DASHBOARD.html`](GRILLE_EVALUATION_API_GUI_DASHBOARD.html).
 
 ## Livrables
 
@@ -121,30 +125,30 @@ uv run pytest ASTRODYNAMICS/api/tests ASTRODYNAMICS/gui/tests ASTRODYNAMICS/dash
 
 Les tests vérifient notamment :
 
-- le chargement unique du modèle par l'API ;
+- le chargement et la disponibilité du modèle par l'API ;
 - les entrées valides et invalides ;
 - le flux JSON `état → action` ;
 - une partie complète réussie via HTTP ;
 - la sauvegarde d'un run GUI ;
-- la disponibilité des métriques et trajectoires du dashboard ;
+- le rendu initial de la GUI et du dashboard avec `streamlit.testing` ;
+- la disponibilité des métriques du dashboard, dont la moyenne glissante et les
+  comptes d'actions ;
 - les fonctions pures de la campagne Optuna : reparamétrisation de `gamma`,
-  grille de raffinement, déduplication des finalistes et cloisonnement des
-  seeds (`ASTRODYNAMICS/tests/`).
+  grille de raffinement, déduplication, isolement du mode rapide et
+  cloisonnement des seeds (`ASTRODYNAMICS/tests/`).
 
 ## Données et logs
 
 `artifacts/` contient les modèles, configurations, courbes TensorBoard,
-évaluations, figures, trajectoires et vidéo. Le dashboard utilise notamment :
+évaluations, figures, télémétrie et vidéo. Le dashboard utilise principalement :
 
 - `experiment_registry.csv` ;
 - `evaluations/*/episodes.csv` ;
-- `evaluations/*/steps.csv` ;
 - `evaluations/*/during_training/evaluations.npz` ;
 - `optuna/ppo_lunarlander/trials.csv` ;
 - `optuna/ppo_lunarlander/parameter_importance.csv` ;
 - `optuna/ppo_lunarlander/gamma_focus/` ;
-- `optuna/ppo_lunarlander/robustness.csv` ;
-- `gui_runs/runs.csv` après utilisation de la GUI.
+- `optuna/ppo_lunarlander/robustness_summary.csv`.
 
 Les bases `study.db` ne sont pas lues par le dashboard : elles conservent les
 études Optuna pour pouvoir les reprendre ou les rejouer hors notebook.

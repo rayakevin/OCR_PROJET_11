@@ -322,6 +322,7 @@ def phase_robustness(
 
 
 def main() -> int:
+    """Enchaîne le raffinement de gamma et la validation multi-seed, puis écrit le réglage retenu."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--workers", type=int, default=16)
     parser.add_argument("--fast", action="store_true")

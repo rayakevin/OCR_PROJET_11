@@ -5,8 +5,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 import gymnasium as gym
+from stable_baselines3 import PPO
 
-from ASTRODYNAMICS.api.app import ENV_ID, app
+from ASTRODYNAMICS.api.app import DEFAULT_MODEL_PATH, ENV_ID, app
 
 
 @pytest.fixture(scope="module")
@@ -51,6 +52,34 @@ def test_predict_returns_a_valid_action(client):
 def test_predict_rejects_invalid_states(client, invalid_state):
     response = client.post("/predict", json={"state": invalid_state})
     assert response.status_code == 422
+
+
+@pytest.mark.parametrize("invalid_number", ["NaN", "Infinity", "-Infinity"])
+def test_predict_rejects_non_finite_numbers(client, invalid_number):
+    payload = (
+        '{"state":[0.0,1.0,'
+        + invalid_number
+        + ',0.0,0.0,0.0,0.0,0.0]}'
+    )
+    response = client.post(
+        "/predict",
+        content=payload,
+        headers={"Content-Type": "application/json"},
+    )
+    assert response.status_code == 422
+
+
+def test_predict_rejects_a_missing_state(client):
+    assert client.post("/predict", json={}).status_code == 422
+
+
+def test_saved_model_keeps_the_same_deterministic_prediction(client):
+    state = np.array([0.0, 1.0, 0.0, -0.1, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+    api_action = client.post("/predict", json={"state": state.tolist()}).json()["action"]
+    reloaded = PPO.load(DEFAULT_MODEL_PATH, device="cpu")
+    reloaded_action, _ = reloaded.predict(state, deterministic=True)
+
+    assert int(np.asarray(reloaded_action).item()) == api_action
 
 
 def test_full_successful_episode_is_driven_by_the_api(client):

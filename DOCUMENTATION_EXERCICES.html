@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation — Exercices 1, 2 et 3</title>
+  <style>
+    :root {
+      --ink: #17242d;
+      --navy: #12384a;
+      --blue: #176780;
+      --orange: #c26a2e;
+      --line: #cbd5da;
+      --surface: #f4f6f7;
+      --soft-blue: #eaf3f6;
+      --soft-orange: #f9eee6;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--surface); font: 15px/1.58 Inter, "Segoe UI", Arial, sans-serif; }
+    main { width: min(1100px, calc(100% - 32px)); margin: 28px auto; padding: 52px 64px; background: white; box-shadow: 0 8px 30px rgba(18, 56, 74, .09); }
+    .topline { height: 5px; margin: -52px -64px 42px; background: var(--orange); }
+    h1, h2, h3 { color: var(--navy); line-height: 1.2; }
+    h1 { margin: 7px 0 12px; font-size: clamp(2rem, 5vw, 3.2rem); }
+    h2 { margin-top: 44px; padding-bottom: 8px; border-bottom: 2px solid var(--blue); }
+    h3 { margin: 0 0 8px; }
+    a { color: var(--blue); }
+    code { padding: .08rem .3rem; border-radius: 3px; background: #edf1f3; font-family: Consolas, monospace; }
+    .kicker { color: var(--blue); font-size: .76rem; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; }
+    .lead { max-width: 820px; color: #4c606b; font-size: 1.08rem; }
+    .actions { float: right; }
+    button { padding: 8px 13px; color: var(--navy); background: white; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; }
+    .path {
+      display: grid;
+      grid-template-columns: repeat(5, auto);
+      gap: 10px;
+      align-items: center;
+      margin: 28px 0;
+    }
+    .node { padding: 18px; border: 1px solid #b9d2dc; border-radius: 5px; background: var(--soft-blue); }
+    .arrow { color: var(--orange); font-size: 1.6rem; font-weight: 800; text-align: center; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
+    .card { padding: 20px; border: 1px solid var(--line); border-top: 4px solid var(--blue); border-radius: 5px; background: white; }
+    .card:nth-child(2) { border-top-color: var(--orange); }
+    .card:nth-child(3) { border-top-color: #26735b; }
+    .card a { font-weight: 700; }
+    .metric { display: block; margin: 8px 0; color: var(--navy); font-size: 1.25rem; font-weight: 750; }
+    table { width: 100%; margin: 16px 0; border-collapse: collapse; }
+    th, td { padding: 10px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--navy); background: #e9eef0; }
+    tbody tr:nth-child(even) { background: #fafbfb; }
+    .callout { margin: 20px 0; padding: 18px; border-left: 4px solid var(--orange); background: var(--soft-orange); }
+    footer { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--line); color: #667780; font-size: .85rem; }
+    @media (max-width: 800px) {
+      main { width: 100%; margin: 0; padding: 34px 22px; }
+      .topline { margin: -34px -22px 28px; }
+      .actions { float: none; margin-bottom: 14px; }
+      .grid { grid-template-columns: 1fr; }
+      .path { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); }
+    }
+    @media print {
+      body { background: white; font-size: 11pt; }
+      main { width: 100%; margin: 0; padding: 18mm; box-shadow: none; }
+      .actions { display: none; }
+      table, .card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="topline"></div>
+  <div class="actions"><button onclick="window.print()">Imprimer / PDF</button></div>
+  <div class="kicker">Projet 11 · Parcours Reinforcement Learning</div>
+  <h1>Exercices 1, 2 et 3<br>Vue d'ensemble</h1>
+  <p class="lead">
+    Les trois sous-projets forment désormais un parcours uniforme : même
+    structure narrative, vocabulaire cohérent, protocoles reproductibles,
+    artefacts explicités et limites annoncées avec la même granularité.
+  </p>
+
+  <h2>Progression pédagogique</h2>
+  <div class="path">
+    <div class="node"><strong>Exercice 1</strong><br>Utiliser un environnement et une bibliothèque.</div>
+    <div class="arrow">→</div>
+    <div class="node"><strong>Exercice 2</strong><br>Coder Q-Learning avec une table.</div>
+    <div class="arrow">→</div>
+    <div class="node"><strong>Exercice 3</strong><br>Remplacer la table par un réseau.</div>
+  </div>
+
+  <div class="grid">
+    <article class="card">
+      <h3>Exercice 1</h3>
+      <p>Gymnasium, baseline aléatoire et première comparaison SB3.</p>
+      <span class="metric">500 ± 0</span>
+      <p>pour PPO, A2C et DQN sur CartPole.</p>
+      <a href="EXERCICE_1/DOCUMENTATION_TECHNIQUE.html">Documentation détaillée</a>
+    </article>
+    <article class="card">
+      <h3>Exercice 2</h3>
+      <p>Q-table NumPy, epsilon-greedy et mise à jour de Bellman.</p>
+      <span class="metric">72,9 %</span>
+      <p>de réussite sur FrozenLake glissant.</p>
+      <a href="EXERCICE_2/DOCUMENTATION_TECHNIQUE.html">Documentation détaillée</a>
+    </article>
+    <article class="card">
+      <h3>Exercice 3</h3>
+      <p>DQN PyTorch, replay buffer, réseau cible et comparaison SB3.</p>
+      <span class="metric">500 ± 0</span>
+      <p>pour le DQN réglé et sauvegardé.</p>
+      <a href="EXERCICE_3/DOCUMENTATION_TECHNIQUE.html">Documentation détaillée</a>
+    </article>
+  </div>
+
+  <h2>Trame commune</h2>
+  <table>
+    <thead><tr><th>Rubrique</th><th>Application identique aux trois exercices</th></tr></thead>
+    <tbody>
+      <tr><td>Objectif</td><td>Question traitée, étapes et fichiers produits annoncés dès l'ouverture.</td></tr>
+      <tr><td>Concepts</td><td>Explication avant le code, avec uniquement les détails utiles à la cellule suivante.</td></tr>
+      <tr><td>Implémentation</td><td>Blocs courts, variables nommées et commentaires réservés aux opérations non évidentes.</td></tr>
+      <tr><td>Évaluation</td><td>Mode déterministe, plusieurs épisodes et seeds contrôlées.</td></tr>
+      <tr><td>Artefacts</td><td>Chaque fichier sauvegardé est relié à son producteur et à son usage.</td></tr>
+      <tr><td>Bilan</td><td>Résultats observés séparés des limites méthodologiques.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Comparaison technique</h2>
+  <table>
+    <thead>
+      <tr><th>Dimension</th><th>Exercice 1</th><th>Exercice 2</th><th>Exercice 3</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Environnement</td><td>CartPole-v1</td><td>FrozenLake-v1</td><td>CartPole-v1</td></tr>
+      <tr><td>État</td><td>4 valeurs continues</td><td>16 états discrets</td><td>4 valeurs continues</td></tr>
+      <tr><td>Politique</td><td>Aléatoire puis SB3</td><td><code>argmax</code> de la Q-table</td><td><code>argmax</code> du réseau</td></tr>
+      <tr><td>Apprentissage</td><td>Délégué à SB3</td><td>Bellman tabulaire</td><td>Bellman + descente de gradient</td></tr>
+      <tr><td>Sorties</td><td>2 GIF</td><td>Q-table + 2 GIF</td><td>2 modèles + TensorBoard</td></tr>
+      <tr><td>Temps indicatif</td><td>5–7 h</td><td>6–8 h</td><td>10–14 h</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>Choix de périmètre.</strong> Ces estimations décrivent le travail
+    humain. Les minutes d'entraînement et de compression des GIF ne sont pas
+    comptées comme du développement actif. Les exercices restent volontairement
+    plus petits que le projet AstroDynamics.
+  </div>
+
+  <h2>Exécution</h2>
+  <p>Les trois notebooks utilisent l'environnement <code>uv</code> commun :</p>
+  <pre class="callout">uv sync --dev
+cd EXERCICE_1  # ou EXERCICE_2 / EXERCICE_3
+uv run jupyter lab</pre>
+  <p>
+    Chaque dossier contient son propre README, sa documentation HTML autonome
+    et les artefacts correspondant à la dernière exécution complète.
+  </p>
+
+  <footer>
+    Vue d'ensemble des exercices harmonisés · Les chiffres affichés proviennent
+    des notebooks réexécutés, sans cellule en erreur.
+  </footer>
+</main>
+</body>
+</html>

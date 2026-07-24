@@ -1,7 +1,10 @@
 """Teste la logique de simulation utilisée par Streamlit."""
 
+from pathlib import Path
+
 import pandas as pd
 from fastapi.testclient import TestClient
+from streamlit.testing.v1 import AppTest
 
 from ASTRODYNAMICS.api.app import app
 from ASTRODYNAMICS.gui.app import check_api, play_episode, replay_episode, save_run
@@ -34,3 +37,14 @@ def test_gui_plays_and_saves_a_successful_episode(tmp_path):
     registry = pd.read_csv(tmp_path / "runs.csv")
     assert len(registry) == 1
     assert bool(registry.iloc[0]["success"])
+
+
+def test_gui_initial_screen_renders_without_exception():
+    app_path = Path(__file__).resolve().parents[1] / "app.py"
+    rendered = AppTest.from_file(str(app_path)).run(timeout=30)
+
+    assert not rendered.exception
+    assert [button.label for button in rendered.button] == [
+        "Vérifier l'API",
+        "Lancer la simulation",
+    ]

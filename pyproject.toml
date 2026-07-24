@@ -1,7 +1,7 @@
 [project]
-name = "p-11"
+name = "eagle-1-autopilot"
 version = "0.1.0"
-description = "Add your description here"
+description = "Prototype étudiant de pilote automatique pour LunarLander-v3"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -12,7 +12,6 @@ dependencies = [
     "moviepy>=2.2.1",
     "optuna>=4.9.0",
     "pandas>=3.0.3",
-    "plotly>=6.9.0",
     "pygame>=2.6.1",
     "stable-baselines3>=2.9.0",
     "streamlit>=1.59.2",
